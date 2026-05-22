@@ -38,7 +38,7 @@ Verifies backend server status and database connections.
 
 ### Health Endpoint Screenshot
 
-![API Health Check Response](docs\architecture\image.png)
+![API Health Check Response](./docs/architecture/image.png)
 
 ## Local Setup
 
