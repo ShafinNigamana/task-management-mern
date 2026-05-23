@@ -1,13 +1,86 @@
-// Placeholder for upcoming authentication implementation
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '7d',
+  });
+};
 
 export const register = async (req, res) => {
-  res.status(501).json({ message: 'Registration not implemented yet' });
+  try {
+    const { name, email, password, role } = req.body;
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: role || 'member',
+    });
+
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({ message: 'Invalid user data received' });
+  }
 };
 
 export const login = async (req, res) => {
-  res.status(501).json({ message: 'Login not implemented yet' });
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({ message: 'Login request failed' });
+  }
 };
 
 export const getMe = async (req, res) => {
-  res.status(501).json({ message: 'Get Me not implemented yet' });
+  try {
+    const user = await User.findById(req.user.id).select('-passwordHash');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ message: 'Failed to retrieve user data' });
+  }
 };
