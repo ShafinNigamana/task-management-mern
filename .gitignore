@@ -1,7 +1,36 @@
+# Dependencies
 node_modules
-.env
+client/node_modules
+server/node_modules
+
+# Build output
 dist
 build
-coverage
-.vscode/settings.json
+client/dist
+server/dist
+
+# Environment variables
+.env
+client/.env
+server/.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/settings.json
+.idea
+
+# Coverage
+coverage
+
+# Temporary files
+*.tmp
+*.temp

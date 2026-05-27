@@ -1,0 +1,13 @@
+{
+  "name": "task-management-mern",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Team Task Management Platform",
+  "scripts": {
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev"
+  },
+  "author": "Shafin Nigamana",
+  "license": "ISC",
+  "packageManager": "pnpm@10.32.1"
+}
