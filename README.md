@@ -1,57 +1,188 @@
-# Team Task Management Platform
+# Task Management MERN
 
-Internship project focused on building a team task management platform using the MERN stack.
+## Project Overview
+
+This project is a team task management platform being developed using the MERN stack.
+
+Current backend implementation includes:
+
+- JWT authentication
+- Team management
+- Task management
+- Audit logging
+- MongoDB + MySQL integration
+
+---
 
 ## Tech Stack
 
-- Frontend: React, Vite
-- Backend: Node.js, Express
-- Database: MongoDB Atlas, Local MySQL
+Backend:
 
-## Implemented Features
+- Node.js
+- Express.js
+- MongoDB Atlas
+- MySQL
+- JWT
+- Mongoose
 
-- Monorepo setup (client/server directories)
-- Frontend and backend integration
-- Dual database connection (MongoDB and MySQL)
-- Backend health check endpoint verifying database connectivity
+Frontend:
 
-## Repository Structure
+- React
+- Vite
 
-- `client/`: React + Vite frontend application
-- `server/`: Express backend API
-- `docs/`: Project documentation and daily logs
+Tools:
 
-## Health Endpoint
+- Postman
+- Git
+- GitHub
 
-GET `/api/health`
-Verifies backend server status and database connections.
+---
 
-```json
-{
-  "status": "ok",
-  "db": {
-    "mongo": "connected",
-    "mysql": "connected"
-  }
-}
+## System Architecture
+
+```text
+React Frontend
+↓
+Express Backend
+↓
+MongoDB (Operational Data)
++
+MySQL (Audit Logs)
 ```
 
-### Health Endpoint Screenshot
+The dual database approach isolates operational data inside scalable document storage (MongoDB), while critical historical interactions are streamed robustly to a local SQL structure (MySQL) for relational querying and strict data preservation.
 
-![API Health Check Response](./docs/architecture/image.png)
+---
 
-## Local Setup
+## Features Implemented
 
-1. Install dependencies from the root directory:
+### Authentication
 
-   ```bash
-   pnpm install
-   ```
+- User registration
+- User login
+- JWT authentication
+- Protected routes
 
-2. Configure environment variables:
-   Create a `.env` file in the `server/` directory containing your MongoDB Atlas connection string and local MySQL credentials.
+### Team Management
 
-3. Start the development servers:
-   ```bash
-   pnpm dev
-   ```
+- Team CRUD APIs
+- Role-based access control
+
+### Task Management
+
+- Task CRUD APIs
+- Task assignment
+- Task filtering
+
+### Audit Logging
+
+- CREATE_TASK logging
+- UPDATE_TASK logging
+- DELETE_TASK logging
+- Audit history API
+- Pagination
+
+---
+
+## API Modules
+
+### Auth Module
+
+- Register
+- Login
+- Current User
+
+### Team Module
+
+- Create Team
+- View Teams
+- Update Team
+- Delete Team
+
+### Task Module
+
+- Create Task
+- View Tasks
+- Update Task
+- Delete Task
+- Task Filters
+
+### Audit Module
+
+- Audit History
+- Pagination
+
+---
+
+## Project Structure
+
+```text
+task-management-mern/
+├── client/
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   └── utils/
+├── docs/
+└── README.md
+```
+
+---
+
+## Development Progress
+
+| Milestone            | Status    |
+| -------------------- | --------- |
+| Project Setup        | Completed |
+| Database Integration | Completed |
+| JWT Authentication   | Completed |
+| Team Management      | Completed |
+| Task Management      | Completed |
+| Audit Logging        | Completed |
+| Audit API            | Completed |
+
+---
+
+## Screenshots
+
+### Project Structure
+
+![Project Structure](docs/screenshots/project-structure.png)
+
+### API Testing Collection
+
+![Postman Collection](docs/screenshots/postman-collection.png)
+
+### Audit API Verification
+
+![Audit API](docs/screenshots/audit-api.png)
+
+### GitHub Repository
+
+![GitHub Repository](docs/screenshots/github-repository.png)
+
+---
+
+## Current Status
+
+Week 2 backend milestone completed successfully.
+
+Implemented:
+
+- Authentication
+- Team Management
+- Task Management
+- Task Filters
+- Audit Logging
+- Audit History API
+
+Next Phase:
+
+- Frontend routing
+- Authentication UI
+- Dashboard development
+- React integration

@@ -3,9 +3,17 @@ import Team from '../models/Team.js';
 export const createTeam = async (req, res) => {
   try {
     const { name, members } = req.body || {};
+    
+    if (!name) {
+      return res.status(400).json({ message: 'Team name is required' });
+    }
+
     const team = await Team.create({ name, members });
     return res.status(201).json(team);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Invalid team data', error: error.message });
+    }
     return res.status(500).json({ message: 'Error creating team', error: error.message });
   }
 };
@@ -36,6 +44,9 @@ export const updateTeam = async (req, res) => {
     
     return res.status(200).json(team);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Invalid team data', error: error.message });
+    }
     return res.status(500).json({ message: 'Error updating team', error: error.message });
   }
 };

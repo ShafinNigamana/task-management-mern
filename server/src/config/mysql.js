@@ -45,4 +45,4 @@ const getMySQLHealthStatus = async () => {
   }
 };
 
-export { connectMySQL, getMySQLHealthStatus };
+export { connectMySQL, getMySQLHealthStatus, createMySQLPool };
