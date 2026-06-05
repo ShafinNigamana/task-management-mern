@@ -24,7 +24,7 @@ function LoginPage() {
     try {
       setIsLoading(true);
       const data = await authService.login(email, password);
-      login(data.token);
+      login(data.token, data.user);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');

@@ -7,19 +7,32 @@ import TeamDetailPage from "../pages/Teams/TeamDetailPage";
 import TasksPage from "../pages/Tasks/TasksPage";
 import TaskDetailPage from "../pages/Tasks/TaskDetailPage";
 import HealthPage from "../pages/System/HealthPage";
+import MainLayout from "../layouts/MainLayout";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/teams" element={<TeamsPage />} />
-      <Route path="/teams/:id" element={<TeamDetailPage />} />
-      <Route path="/tasks" element={<TasksPage />} />
-      <Route path="/tasks/:id" element={<TaskDetailPage />} />
       <Route path="/health" element={<HealthPage />} />
+
+      {/* Protected Routes with Layout */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/teams" element={<TeamsPage />} />
+        <Route path="/teams/:id" element={<TeamDetailPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/tasks/:id" element={<TaskDetailPage />} />
+      </Route>
     </Routes>
   );
 }
