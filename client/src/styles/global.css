@@ -1,196 +1,834 @@
-* {
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+
+:root {
+  /* Monochrome palette */
+  --color-bg:        #fafafa;
+  --color-surface:   #ffffff;
+  --color-border:    #e5e5e5;
+  --color-border-subtle: #f0f0f0;
+
+  --color-text-primary:   #171717;
+  --color-text-secondary: #525252;
+  --color-text-muted:     #a3a3a3;
+
+  --color-accent:    #171717;
+  --color-accent-hover: #404040;
+
+  /* Status colors — kept minimal */
+  --color-status-todo:       #dc2626;
+  --color-status-inprogress: #ca8a04;
+  --color-status-done:       #16a34a;
+
+  /* Radii */
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+
+  /* Shadows */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.06);
+
+  /* Typography scale
+     ─────────────────────────────────────────────
+     Level           Size     Weight  Use
+     ─────────────────────────────────────────────
+     Page title      1.75rem  600     Dashboard, Teams, Team Details
+     Section title   1.125rem 600     Recent Tasks, Planned Workflow
+     Card title      0.9375rem 600    Team card names
+     Body            0.875rem 400     Readable body copy
+     Body strong     0.875rem 500     Task names, detail values
+     Secondary       0.8125rem 400    Meta info, labels
+     Caption         0.75rem  500     Status badges, dates
+     ───────────────────────────────────────────── */
+  --text-page-title:    1.75rem;    /* 28px */
+  --text-section-title: 1.125rem;   /* 18px */
+  --text-card-title:    0.9375rem;  /* 15px */
+  --text-body:          0.875rem;   /* 14px */
+  --text-secondary:     0.8125rem;  /* 13px */
+  --text-caption:       0.75rem;    /* 12px */
+
+  /* Auth — one level above page for the centered hero context */
+  --text-auth-title:    1.625rem;   /* 26px */
+
+  /* Summary number — prominent data callout */
+  --text-stat:          2rem;       /* 32px */
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+}
+
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f8fafc;
-  color: #334155;
-  line-height: 1.6;
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  letter-spacing: -0.006em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+
+/* ============================================================
+   AUTH PAGES  (Login / Signup)
+   ============================================================ */
 
 .app-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: var(--space-6);
+  background-color: var(--color-bg);
 }
 
-.welcome-card {
-  background: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03);
-  max-width: 500px;
-  width: 100%;
-  text-align: center;
-}
-
-.welcome-card h1 {
-  font-size: 2.2rem;
-  color: #0f172a;
-  margin-bottom: 12px;
-}
-
-.subtitle {
-  color: #64748b;
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-}
-
-/* Auth Form Styles */
 .auth-card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: var(--color-surface);
+  padding: var(--space-10);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   width: 100%;
 }
 
 .auth-card--login {
-  max-width: 450px;
+  max-width: 400px;
 }
 
 .auth-card--signup {
-  max-width: 500px;
+  max-width: 440px;
 }
 
 .auth-title {
-  font-size: 2.4rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.5px;
+  font-size: var(--text-auth-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .auth-subtitle {
-  font-size: 0.95rem;
-  color: #6b7280;
-  margin-bottom: 1.75rem;
+  font-size: var(--text-body);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-8);
+  line-height: 1.5;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .form-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  display: block;
+  font-size: var(--text-secondary);
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .form-input,
 .form-select {
-  padding: 0.625rem 0.875rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  line-height: 1.5;
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--color-text-primary);
+  box-shadow: 0 0 0 1px var(--color-text-primary);
 }
 
 .form-input::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .auth-button {
-  padding: 0.75rem 1rem;
-  background-color: #2563eb;
-  color: white;
+  padding: 10px var(--space-4);
+  background-color: var(--color-accent);
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 0.5rem;
+  transition: background-color var(--transition-fast);
+  margin-top: var(--space-2);
+  line-height: 1.5;
 }
 
 .auth-button:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: var(--color-accent-hover);
 }
 
 .auth-button:disabled {
-  background-color: #9ca3af;
+  background-color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
 .auth-error {
-  background-color: #fee2e2;
+  background-color: #fef2f2;
   color: #991b1b;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  margin-bottom: 1.25rem;
-  border-left: 4px solid #dc2626;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  border: 1px solid #fecaca;
 }
 
 .auth-footer {
-  margin-top: 1.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
 }
 
 .auth-footer-text {
-  color: #4b5563;
-  font-size: 0.9rem;
-  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-secondary);
+  margin: 0 0 var(--space-2) 0;
 }
 
 .auth-footer-link {
-  color: #2563eb;
+  color: var(--color-text-primary);
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.2s;
+  font-size: var(--text-secondary);
+  transition: color var(--transition-fast);
 }
 
 .auth-footer-link:hover {
-  color: #1d4ed8;
+  color: var(--color-text-secondary);
 }
+
+
+/* ============================================================
+   LAYOUT  (Header / Sidebar / Main)
+   ============================================================ */
+
+.layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+/* ---- Header ---- */
+.layout-header {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  height: 52px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-title {
+  font-size: var(--text-card-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.header-user {
+  font-size: var(--text-secondary);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.logout-button {
+  padding: 5px 12px;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1.5;
+}
+
+.logout-button:hover {
+  background-color: var(--color-text-primary);
+  color: var(--color-surface);
+  border-color: var(--color-text-primary);
+}
+
+/* ---- Sidebar + Main Container ---- */
+.layout-container {
+  display: flex;
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.layout-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-5) 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-3);
+}
+
+.nav-link {
+  padding: 7px var(--space-3);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--text-secondary);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+.nav-link:hover {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text-primary);
+}
+
+.nav-link--active {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* ---- Main Content ---- */
+.layout-main {
+  flex: 1;
+  padding: var(--space-8) var(--space-10);
+  overflow-y: auto;
+  min-width: 0;
+}
+
+
+/* ============================================================
+   PAGE HEADERS  (shared by Dashboard, Teams, Team Detail)
+   ============================================================ */
+
+.dashboard-container,
+.teams-container {
+  width: 100%;
+  max-width: 960px;
+}
+
+.dashboard-header,
+.teams-header {
+  margin-bottom: var(--space-10);
+}
+
+/*
+ * PAGE TITLE — the dominant text on every page.
+ * 28px / 600 weight / tight tracking.
+ * This is clearly the largest text in the content area.
+ */
+.dashboard-title,
+.teams-title {
+  font-size: var(--text-page-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/*
+ * PAGE SUBTITLE — sits directly below the page title.
+ * 14px / 400 / muted gray. Provides contrast against the large title.
+ */
+.dashboard-subtitle,
+.teams-subtitle {
+  font-size: var(--text-body);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+
+/* ============================================================
+   DASHBOARD — Summary Cards
+   ============================================================ */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow var(--transition-base);
+}
+
+.summary-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/*
+ * SUMMARY LABEL — 12px uppercase, muted.
+ * Functions as a "caption" above the big number.
+ * Deliberately tiny to create contrast with the stat value below.
+ */
+.summary-label {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/*
+ * SUMMARY VALUE — the big number (32px).
+ * The single largest text element on Dashboard.
+ * Creates a strong visual anchor in each summary card.
+ */
+.summary-value {
+  font-size: var(--text-stat);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+
+/* ============================================================
+   DASHBOARD — Section Cards (Recent Tasks, etc.)
+   ============================================================ */
+
+.dashboard-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-xs);
+}
+
+.dashboard-section + .dashboard-section {
+  margin-top: var(--space-5);
+}
+
+/*
+ * SECTION TITLE — 18px / 600.
+ * Clearly smaller than page title (28px) but larger than body (14px).
+ * This is the heading inside cards like "Recent Tasks", "Team Details".
+ */
+.section-title {
+  font-size: var(--text-section-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-5);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+
+/* ============================================================
+   DASHBOARD — Task List Items
+   ============================================================ */
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: none;
+  transition: background-color var(--transition-fast);
+}
+
+.task-item:hover {
+  background-color: var(--color-bg);
+}
+
+.task-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/*
+ * TASK TITLE — 14px / 500.
+ * Same size as body but medium weight makes it stand out
+ * from the lighter metadata below it.
+ */
+.task-title {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin: 0 0 3px 0;
+}
+
+/*
+ * TASK META — 12px / status + priority.
+ * Smallest text tier in the hierarchy.
+ * Status is bold + colored, priority is muted.
+ */
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-caption);
+}
+
+.task-status {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: var(--text-caption);
+  letter-spacing: 0.01em;
+}
+
+.task-priority {
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+  font-size: var(--text-caption);
+  font-weight: 400;
+}
+
+.task-date {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  margin: 0;
+  white-space: nowrap;
+  margin-left: var(--space-4);
+  font-weight: 400;
+}
+
+
+/* ============================================================
+   TEAMS PAGE
+   ============================================================ */
+
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.team-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.team-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #d4d4d4;
+}
+
+.team-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/*
+ * TEAM CARD TITLE — 15px / 600.
+ * Between section title (18px) and body (14px).
+ * Named entity — needs to feel like a clickable heading.
+ */
+.team-card-title {
+  font-size: var(--text-card-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-info-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-secondary);
+  margin: 0;
+}
+
+.team-info-label {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.team-info-value {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.team-button {
+  padding: 7px var(--space-4);
+  background-color: var(--color-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  align-self: flex-start;
+}
+
+.team-button:hover {
+  background-color: var(--color-accent-hover);
+}
+
+
+/* ============================================================
+   TEAM DETAIL PAGE  (Day 18 Placeholder)
+   ============================================================ */
+
+/*
+ * Detail key/value pairs — "Team ID: xxx", "Description: xxx"
+ * Label is 13px muted, value is 14px primary.
+ */
+.detail-row {
+  margin-bottom: var(--space-4);
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-row-label {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.detail-row-value {
+  font-size: var(--text-body);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/*
+ * Feature / workflow lists inside summary cards.
+ * Uses the same card container but with list content.
+ * 14px body, secondary color — reads as informational, not actionable.
+ */
+.placeholder-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  list-style-type: disc;
+}
+
+.placeholder-list li {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  padding: 3px 0;
+}
+
+.placeholder-list li::marker {
+  color: var(--color-text-muted);
+}
+
+/*
+ * Section title inside summary cards on Team Detail page.
+ * Slightly smaller than dashboard section-title to create
+ * nesting hierarchy: page title > section title > card section title.
+ */
+.card-section-title {
+  font-size: var(--text-card-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+  letter-spacing: -0.005em;
+}
+
+
+/* ============================================================
+   COMMON / SHARED
+   ============================================================ */
+
+/* Welcome card — used by placeholder pages */
+.welcome-card {
+  background: var(--color-surface);
+  padding: var(--space-10);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xs);
+  max-width: 960px;
+  width: 100%;
+}
+
+.welcome-card h1 {
+  font-size: var(--text-page-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-body);
+}
+
+.loading-text {
+  font-size: var(--text-body);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+}
+
+.error-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  color: #991b1b;
+  font-size: var(--text-body);
+  text-align: center;
+}
+
+.empty-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-body);
+}
+
+
+/* ============================================================
+   STATUS SECTION  (Health page)
+   ============================================================ */
 
 .status-section {
   text-align: left;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-5);
 }
 
 .status-section h2 {
-  font-size: 0.85rem;
-  color: #94a3b8;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 15px;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-4);
   font-weight: 600;
 }
 
 .status-box {
-  padding: 16px;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  background-color: #f1f5f9;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  background-color: var(--color-bg);
 }
 
 .status-box.success {
@@ -200,394 +838,91 @@ body {
 }
 
 .status-indicator {
-  margin-right: 8px;
+  margin-right: var(--space-2);
   color: #22c55e;
 }
 
 .status-indicator.outline {
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .db-status {
-  margin-top: 10px;
-  font-size: 0.85rem;
-  padding-left: 20px;
+  margin-top: var(--space-2);
+  font-size: var(--text-secondary);
+  padding-left: var(--space-5);
   color: #15803d;
 }
 
 .db-status p {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
-/* Layout Styles */
-.layout-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #f8fafc;
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .header-content {
+    padding: 0 var(--space-5);
+  }
+
+  .layout-main {
+    padding: var(--space-6);
+  }
+
+  .layout-sidebar {
+    width: 200px;
+    min-width: 200px;
+  }
 }
 
-.layout-header {
-  background-color: white;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
 
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 70px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
+  .layout-sidebar {
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-3) 0;
+  }
 
-.header-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
+  .sidebar-nav {
+    flex-direction: row;
+    gap: var(--space-1);
+    padding: 0 var(--space-4);
+  }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
+  .nav-link {
+    padding: 6px var(--space-3);
+    font-size: var(--text-caption);
+  }
 
-.header-user {
-  font-size: 0.95rem;
-  color: #334155;
-  font-weight: 500;
-}
+  .layout-main {
+    padding: var(--space-5);
+  }
 
-.logout-button {
-  padding: 0.5rem 1rem;
-  background-color: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 
-.logout-button:hover {
-  background-color: #b91c1c;
-}
+  .teams-grid {
+    grid-template-columns: 1fr;
+  }
 
-.layout-container {
-  display: flex;
-  flex: 1;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-  gap: 0;
-}
+  .auth-card {
+    padding: var(--space-8);
+  }
 
-.layout-sidebar {
-  width: 240px;
-  background-color: white;
-  border-right: 1px solid #e2e8f0;
-  padding: 24px 0;
-  overflow-y: auto;
-}
+  .auth-title {
+    font-size: 1.375rem;
+  }
 
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.nav-link {
-  padding: 12px 24px;
-  color: #475569;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: block;
-  border-left: 3px solid transparent;
-}
-
-.nav-link:hover {
-  background-color: #f1f5f9;
-  color: #334155;
-}
-
-.nav-link--active {
-  background-color: #eff6ff;
-  color: #2563eb;
-  border-left-color: #2563eb;
-}
-
-.layout-main {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-
-.welcome-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  max-width: 800px;
-}
-
-/* Dashboard Styles */
-.dashboard-container {
-  width: 100%;
-  max-width: 1100px;
-}
-
-.dashboard-header {
-  margin-bottom: 32px;
-}
-
-.dashboard-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-
-.dashboard-subtitle {
-  font-size: 0.95rem;
-  color: #64748b;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.summary-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.summary-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.summary-label {
-  font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 500;
-  margin: 0;
-}
-
-.summary-value {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-}
-
-.dashboard-section {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 16px;
-}
-
-.tasks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.task-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-.task-main {
-  flex: 1;
-}
-
-.task-title {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #0f172a;
-  margin-bottom: 8px;
-  margin: 0 0 8px 0;
-}
-
-.task-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 0.875rem;
-}
-
-.task-status {
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.task-priority {
-  color: #64748b;
-  text-transform: capitalize;
-}
-
-.task-date {
-  font-size: 0.875rem;
-  color: #94a3b8;
-  margin: 0;
-  white-space: nowrap;
-  margin-left: 16px;
-}
-
-/* Teams Page Styles */
-.teams-container {
-  width: 100%;
-  max-width: 1100px;
-}
-
-.teams-header {
-  margin-bottom: 32px;
-}
-
-.teams-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-
-.teams-subtitle {
-  font-size: 0.95rem;
-  color: #64748b;
-}
-
-.teams-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.team-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: box-shadow 0.2s, border-color 0.2s;
-}
-
-.team-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: #cbd5e1;
-}
-
-.team-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.team-card-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0;
-}
-
-.team-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.team-info-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.team-info-label {
-  color: #64748b;
-  font-weight: 500;
-}
-
-.team-info-value {
-  color: #0f172a;
-  font-weight: 600;
-}
-
-.team-button {
-  padding: 8px 16px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  align-self: flex-start;
-}
-
-.team-button:hover {
-  background-color: #1d4ed8;
-}
-
-/* Common Styles */
-.loading-text {
-  font-size: 0.95rem;
-  color: #64748b;
-  text-align: center;
-  padding: 32px 24px;
-}
-
-.error-card {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  padding: 24px;
-  color: #991b1b;
-  font-size: 0.95rem;
-  text-align: center;
-}
-
-.empty-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-  color: #64748b;
-  font-size: 0.95rem;
+  .dashboard-title,
+  .teams-title {
+    font-size: 1.5rem;
+  }
 }

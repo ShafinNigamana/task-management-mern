@@ -1,9 +1,12 @@
 function TasksPage() {
   return (
-    <div className="app-container">
-      <div className="welcome-card">
-        <h1>Tasks</h1>
-        <p className="subtitle">View, assign, and track current tasks</p>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Tasks</h1>
+        <p className="dashboard-subtitle">View, assign, and track current tasks</p>
+      </div>
+      <div className="empty-card">
+        <p>Task management features coming soon.</p>
       </div>
     </div>
   );

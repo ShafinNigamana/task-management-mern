@@ -17,7 +17,7 @@ function MainLayout() {
       {/* Header */}
       <header className="layout-header">
         <div className="header-content">
-          <h1 className="header-title">Task Management Platform</h1>
+          <h1 className="header-title">Team Task Management Platform</h1>
           <div className="header-actions">
             <span className="header-user">Welcome, {displayName}</span>
             <button onClick={handleLogout} className="logout-button">

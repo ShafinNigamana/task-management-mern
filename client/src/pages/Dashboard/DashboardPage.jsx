@@ -52,11 +52,11 @@ function DashboardPage() {
 
   const getStatusColor = (status) => {
     const colors = {
-      'todo': '#ef4444',
-      'in-progress': '#f59e0b',
-      'done': '#10b981',
+      'todo': '#b91c1c',
+      'in-progress': '#a16207',
+      'done': '#15803d',
     };
-    return colors[status] || '#6b7280';
+    return colors[status] || '#737373';
   };
 
   const formatDate = (dateString) => {

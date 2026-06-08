@@ -51,12 +51,14 @@ function TeamDetailPage() {
 
       <div className="dashboard-section" style={{ marginBottom: '24px' }}>
         <h2 className="section-title">Team Details</h2>
-        <div style={{ marginBottom: '8px' }}>
-          <p style={{ margin: '0 0 12px 0', fontSize: '0.95rem', color: '#64748b' }}>
-            <strong style={{ color: '#0f172a' }}>Team ID:</strong> {teamId}
+        <div className="detail-row">
+          <p className="detail-row-value">
+            <strong className="detail-row-label">Team ID:</strong> {teamId}
           </p>
-          <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b' }}>
-            <strong style={{ color: '#0f172a' }}>Description:</strong> This page will host the Kanban board for managing team tasks in Week 4.
+        </div>
+        <div className="detail-row">
+          <p className="detail-row-value">
+            <strong className="detail-row-label">Description:</strong> This page will host the Kanban board for managing team tasks in Week 4.
           </p>
         </div>
       </div>
@@ -64,10 +66,10 @@ function TeamDetailPage() {
       <div className="summary-grid">
         <div className="summary-card">
           <div className="summary-content">
-            <h2 className="section-title" style={{ marginBottom: '12px' }}>Planned Workflow</h2>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#64748b', fontSize: '0.95rem' }}>
-              <li style={{ marginBottom: '8px' }}>To Do</li>
-              <li style={{ marginBottom: '8px' }}>In Progress</li>
+            <h2 className="card-section-title">Planned Workflow</h2>
+            <ul className="placeholder-list">
+              <li>To Do</li>
+              <li>In Progress</li>
               <li>Done</li>
             </ul>
           </div>
@@ -75,11 +77,11 @@ function TeamDetailPage() {
 
         <div className="summary-card">
           <div className="summary-content">
-            <h2 className="section-title" style={{ marginBottom: '12px' }}>Upcoming Features</h2>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#64748b', fontSize: '0.95rem' }}>
-              <li style={{ marginBottom: '8px' }}>Task assignment</li>
-              <li style={{ marginBottom: '8px' }}>Drag and drop workflow</li>
-              <li style={{ marginBottom: '8px' }}>Status updates</li>
+            <h2 className="card-section-title">Upcoming Features</h2>
+            <ul className="placeholder-list">
+              <li>Task assignment</li>
+              <li>Drag and drop workflow</li>
+              <li>Status updates</li>
               <li>Audit logging</li>
             </ul>
           </div>
@@ -89,4 +91,4 @@ function TeamDetailPage() {
   );
 }
 
-export default TeamDetailPage;
+export default TeamDetailPage;
