@@ -17,6 +17,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { getTasksByTeam, updateTaskStatus } from '../../services/taskService';
 import { useAuth } from '../../context/AuthContext';
+import ActivityFeed from '../../components/ActivityFeed';
 
 // Column definitions — maps to Task model status enum
 const COLUMNS = [
@@ -353,6 +354,7 @@ function TeamDetailPage() {
           ) : null}
         </DragOverlay>
       </DndContext>
+      <ActivityFeed teamId={teamId} />
     </div>
   );
 }

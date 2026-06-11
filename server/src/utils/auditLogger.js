@@ -2,7 +2,7 @@ import { createMySQLPool } from '../config/mysql.js';
 
 let isTableInitialized = false;
 
-const initAuditTable = async (pool) => {
+export const initAuditTable = async (pool) => {
   if (isTableInitialized) return;
   
   try {
@@ -18,6 +18,21 @@ const initAuditTable = async (pool) => {
     `;
     await pool.query(query);
 
+    // Safe schema migration: add team_id if it does not exist
+    const [columns] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_NAME = 'audit_log' 
+        AND COLUMN_NAME = 'team_id' 
+        AND TABLE_SCHEMA = DATABASE()
+    `);
+
+    if (columns.length === 0) {
+      await pool.query(`
+        ALTER TABLE audit_log ADD COLUMN team_id VARCHAR(255) NULL
+      `);
+    }
+
     isTableInitialized = true;
   } catch (error) {
     console.error('Failed to initialize audit_log table:', error.message);
@@ -31,23 +46,35 @@ const initAuditTable = async (pool) => {
  * @param {string} action - The action performed (e.g. 'CREATE_TASK')
  * @param {string} actorId - ID of the user performing the action
  * @param {string} taskId - ID of the task affected
- * @param {object} payload - Relevant payload data snapshot
+ * @param {string} teamIdOrPayload - The ID of the team, or the payload (for backward compatibility)
+ * @param {object} [payload] - Relevant payload data snapshot
  */
-export const logAudit = async (action, actorId, taskId, payload) => {
+export const logAudit = async (action, actorId, taskId, teamIdOrPayload, payload) => {
   try {
     const pool = createMySQLPool();
     await initAuditTable(pool);
+
+    let finalTeamId = null;
+    let finalPayload = null;
+
+    if (payload === undefined && typeof teamIdOrPayload === 'object') {
+      // Backward compatibility check: if 4 arguments are passed, map 4th to payload
+      finalPayload = teamIdOrPayload;
+    } else {
+      finalTeamId = teamIdOrPayload || null;
+      finalPayload = payload || null;
+    }
     
     const query = `
-      INSERT INTO audit_log (action, actor_id, target_id, payload_json)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO audit_log (action, actor_id, target_id, team_id, payload_json)
+      VALUES (?, ?, ?, ?, ?)
     `;
     
-    const safePayload = payload ? JSON.stringify(payload) : null;
+    const safePayload = finalPayload ? JSON.stringify(finalPayload) : null;
     const safeActorId = actorId || 'SYSTEM';
     const safeTaskId = taskId || 'UNKNOWN';
 
-    await pool.execute(query, [action, safeActorId, safeTaskId, safePayload]);
+    await pool.execute(query, [action, safeActorId, safeTaskId, finalTeamId, safePayload]);
   } catch (error) {
     console.error(`Audit Logging Failed [${action}]:`, error.message);
   }

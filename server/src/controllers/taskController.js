@@ -20,7 +20,7 @@ export const createTask = async (req, res) => {
     });
     
     // Log audit event asynchronously
-    logAudit('CREATE_TASK', req.user?.id, task._id.toString(), {
+    logAudit('CREATE_TASK', req.user?.id, task._id.toString(), task.teamId ? task.teamId.toString() : null, {
       title: task.title,
       status: task.status
     });
@@ -83,7 +83,8 @@ export const updateTask = async (req, res) => {
     }
     
     // Log audit event asynchronously
-    logAudit('UPDATE_TASK', req.user?.id, task._id.toString(), {
+    logAudit('UPDATE_TASK', req.user?.id, task._id.toString(), task.teamId ? task.teamId.toString() : null, {
+      title: task.title,
       updatedFields: updates
     });
     
@@ -99,14 +100,20 @@ export const updateTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const task = await Task.findByIdAndDelete(id);
+    const task = await Task.findById(id);
     
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
     
+    const teamId = task.teamId ? task.teamId.toString() : null;
+    const title = task.title;
+
+    await Task.findByIdAndDelete(id);
+    
     // Log audit event asynchronously
-    logAudit('DELETE_TASK', req.user?.id, id, {
+    logAudit('DELETE_TASK', req.user?.id, id, teamId, {
+      title,
       deletedTaskId: id
     });
     
