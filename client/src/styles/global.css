@@ -685,66 +685,208 @@ input, select, textarea {
 
 
 /* ============================================================
-   TEAM DETAIL PAGE  (Day 18 Placeholder)
+   KANBAN BOARD  (Day 21 — replaces Day 18 placeholder)
    ============================================================ */
 
-/*
- * Detail key/value pairs — "Team ID: xxx", "Description: xxx"
- * Label is 13px muted, value is 14px primary.
- */
-.detail-row {
-  margin-bottom: var(--space-4);
+.kanban-container {
+  width: 100%;
 }
 
-.detail-row:last-child {
-  margin-bottom: 0;
+.kanban-header {
+  margin-bottom: var(--space-8);
 }
 
-.detail-row-label {
-  font-size: var(--text-body);
+.kanban-title {
+  font-size: var(--text-page-title);
   font-weight: 600;
   color: var(--color-text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
-.detail-row-value {
+.kanban-subtitle {
   font-size: var(--text-body);
-  font-weight: 400;
-  color: var(--color-text-secondary);
-}
-
-/*
- * Feature / workflow lists inside summary cards.
- * Uses the same card container but with list content.
- * 14px body, secondary color — reads as informational, not actionable.
- */
-.placeholder-list {
-  margin: 0;
-  padding-left: var(--space-5);
-  list-style-type: disc;
-}
-
-.placeholder-list li {
-  font-size: var(--text-body);
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   line-height: 1.5;
-  padding: 3px 0;
 }
 
-.placeholder-list li::marker {
+/* ---- Board layout ---- */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* ---- Columns ---- */
+.kanban-column {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-column-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kanban-column-title {
+  font-size: var(--text-secondary);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kanban-column-count {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background-color: var(--color-border-subtle);
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 22px;
+  text-align: center;
+}
+
+.kanban-column-body {
+  padding: var(--space-3);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kanban-column-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-secondary);
+}
+
+/* Drop target highlight */
+.kanban-column--over .kanban-column-body {
+  background-color: var(--color-border-subtle);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* ---- Task Cards ---- */
+.kanban-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  cursor: grab;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  touch-action: none;
+  user-select: none;
+}
+
+.kanban-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: #d4d4d4;
+}
+
+.kanban-card--dragging {
+  box-shadow: var(--shadow-md);
+  border-color: #d4d4d4;
+  opacity: 0.9;
+  cursor: grabbing;
+  z-index: 10;
+}
+
+.kanban-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.kanban-card-avatar {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 50%;
+  background-color: var(--color-text-primary);
+  color: var(--color-surface);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.kanban-card-title {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.kanban-card-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-left: 36px; /* avatar width + gap */
+}
+
+.kanban-badge {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.kanban-badge--priority {
+  background-color: var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  text-transform: capitalize;
+}
+
+.kanban-badge--priority-high {
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+.kanban-badge--priority-low {
+  background-color: var(--color-border-subtle);
   color: var(--color-text-muted);
 }
 
-/*
- * Section title inside summary cards on Team Detail page.
- * Slightly smaller than dashboard section-title to create
- * nesting hierarchy: page title > section title > card section title.
- */
-.card-section-title {
-  font-size: var(--text-card-title);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-4);
-  letter-spacing: -0.005em;
+.kanban-badge--date {
+  background-color: transparent;
+  color: var(--color-text-muted);
+  padding: 2px 0;
+}
+
+/* Drag overlay card (the floating copy) */
+.kanban-card-overlay {
+  background: var(--color-surface);
+  border: 1px solid #d4d4d4;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-md);
+  cursor: grabbing;
+  opacity: 0.95;
 }
 
 
@@ -875,6 +1017,10 @@ input, select, textarea {
     width: 200px;
     min-width: 200px;
   }
+
+  .kanban-board {
+    gap: var(--space-3);
+  }
 }
 
 @media (max-width: 768px) {
@@ -922,7 +1068,14 @@ input, select, textarea {
   }
 
   .dashboard-title,
-  .teams-title {
+  .teams-title,
+  .kanban-title {
     font-size: 1.5rem;
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
