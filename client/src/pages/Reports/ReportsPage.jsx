@@ -111,8 +111,8 @@ export default function ReportsPage() {
             </div>
           ) : (
             <div className="reports-card" style={{ padding: '20px 16px 10px 16px' }}>
-              <div style={{ width: '100%', height: 220 }}>
-                <ResponsiveContainer>
+              <div style={{ width: '100%', height: 220, minWidth: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
                     <XAxis 
                       dataKey="name" 

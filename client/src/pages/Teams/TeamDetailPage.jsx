@@ -16,6 +16,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getTasksByTeam, updateTaskStatus } from '../../services/taskService';
+import { getTeams, updateTeam } from '../../services/teamService';
+import { searchUsers } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import ActivityFeed from '../../components/ActivityFeed';
 
@@ -159,6 +161,14 @@ function TeamDetailPage() {
   const [overColumnId, setOverColumnId] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [memberSearchResults, setMemberSearchResults] = useState([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [memberModalError, setMemberModalError] = useState(null);
+
+  const [team, setTeam] = useState(null);
+
   // Track loading + dragging state for polling control
   const hasLoadedOnce = useRef(false);
   const isDragging = useRef(false);
@@ -169,6 +179,7 @@ function TeamDetailPage() {
     setPrevTeamId(teamId);
     setLoading(true);
     setError(null);
+    setTeam(null);
   }
 
   // Reset loaded tracker on team changes inside effect to avoid ref-in-render violations
@@ -177,6 +188,16 @@ function TeamDetailPage() {
   }, [teamId]);
 
   // ── Data fetching ──
+
+  const fetchTeamDetails = useCallback(async () => {
+    try {
+      const allTeams = await getTeams();
+      const currentTeam = allTeams.find((t) => t._id === teamId);
+      setTeam(currentTeam || null);
+    } catch {
+      // Fail silently
+    }
+  }, [teamId]);
 
   const fetchTasks = useCallback(async () => {
     // Skip polling refresh while user is dragging to avoid state conflicts
@@ -200,10 +221,80 @@ function TeamDetailPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTasks();
+    fetchTeamDetails();
 
-    const interval = setInterval(fetchTasks, 5000);
+    const interval = setInterval(() => {
+      fetchTasks();
+      fetchTeamDetails();
+    }, 5000);
     return () => clearInterval(interval);
-  }, [fetchTasks]);
+  }, [fetchTasks, fetchTeamDetails]);
+
+  const handleMemberSearchChange = (e) => {
+    const val = e.target.value;
+    setMemberSearchQuery(val);
+    if (!val.trim()) {
+      setMemberSearchResults([]);
+    }
+  };
+
+  // Search users effect with debouncing
+  useEffect(() => {
+    if (!memberSearchQuery.trim()) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const users = await searchUsers(memberSearchQuery);
+        const filtered = users.filter(
+          (u) => !selectedMembers.some((sm) => sm._id === u._id)
+        );
+        setMemberSearchResults(filtered);
+      } catch {
+        // Fail silently
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [memberSearchQuery, selectedMembers]);
+
+  const openMemberModal = () => {
+    setSelectedMembers(team ? [...team.members] : []);
+    setMemberSearchQuery('');
+    setMemberSearchResults([]);
+    setMemberModalError(null);
+    setShowMemberModal(true);
+  };
+
+  const handleAddMember = (m) => {
+    setSelectedMembers((prev) => [...prev, m]);
+    setMemberSearchQuery('');
+    setMemberSearchResults([]);
+  };
+
+  const handleRemoveMember = (memberId) => {
+    setSelectedMembers((prev) => prev.filter((m) => m._id !== memberId));
+  };
+
+  const handleSaveMembers = async (e) => {
+    e.preventDefault();
+    try {
+      setMemberModalError(null);
+      setLoading(true);
+      await updateTeam(teamId, {
+        name: team.name,
+        members: selectedMembers.map((m) => m._id),
+      });
+      setShowMemberModal(false);
+      await fetchTeamDetails();
+    } catch (err) {
+      setMemberModalError(err.response?.data?.message || 'Failed to update team members.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // ── Filtering ──
 
@@ -332,11 +423,25 @@ function TeamDetailPage() {
 
   return (
     <div className="kanban-container">
-      <div className="kanban-header">
-        <h1 className="kanban-title">Board</h1>
-        <p className="kanban-subtitle">
-          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} across {COLUMNS.length} columns
-        </p>
+      <div className="kanban-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 className="kanban-title">{team?.name || 'Board'}</h1>
+          <p className="kanban-subtitle">
+            {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} across {COLUMNS.length} columns
+            {team && ` • ${team.members.length} members`}
+          </p>
+        </div>
+        {user?.role === 'manager' && (
+          <button 
+            type="button" 
+            className="btn-secondary" 
+            onClick={openMemberModal}
+          >
+            Manage Members
+          </button>
+        )}
+      </div>
+      <div className="kanban-header" style={{ marginTop: 0, marginBottom: 'var(--space-8)' }}>
         <div className="kanban-filters">
           {FILTERS.map((filter) => (
             <button
@@ -379,6 +484,93 @@ function TeamDetailPage() {
         </DragOverlay>
       </DndContext>
       <ActivityFeed key={teamId} teamId={teamId} />
+
+      {/* Manage Members Modal */}
+      {showMemberModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="modal-title">Manage Team Members</h2>
+              <button 
+                type="button" 
+                className="modal-close" 
+                onClick={() => setShowMemberModal(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveMembers} className="auth-form" style={{ gap: 'var(--space-4)' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="memberSearch">Search Users</label>
+                <input
+                  type="text"
+                  id="memberSearch"
+                  value={memberSearchQuery}
+                  onChange={handleMemberSearchChange}
+                  placeholder="Type name or email..."
+                  className="form-input"
+                  autoComplete="off"
+                />
+                {memberSearchResults.length > 0 && (
+                  <div className="search-results-list">
+                    {memberSearchResults.map((u) => (
+                      <div 
+                        key={u._id} 
+                        className="search-result-item"
+                        onClick={() => handleAddMember(u)}
+                      >
+                        <span className="search-result-name">{u.name}</span>
+                        <span className="search-result-email">{u.email}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Team Members ({selectedMembers.length})</label>
+                {selectedMembers.length === 0 ? (
+                  <p style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', margin: 0 }}>No members in this team.</p>
+                ) : (
+                  <div className="selected-members-list">
+                    {selectedMembers.map((m) => (
+                      <div key={m._id} className="member-pill">
+                        <span>{m.name}</span>
+                        <button 
+                          type="button" 
+                          className="member-pill-remove" 
+                          onClick={() => handleRemoveMember(m._id)}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {memberModalError && <div className="auth-error">{memberModalError}</div>}
+
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={() => setShowMemberModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

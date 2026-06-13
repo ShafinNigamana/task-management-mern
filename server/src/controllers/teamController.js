@@ -8,7 +8,11 @@ export const createTeam = async (req, res) => {
       return res.status(400).json({ message: 'Team name is required' });
     }
 
-    const team = await Team.create({ name, members });
+    const team = await Team.create({ 
+      name, 
+      members,
+      managerId: req.user?.id 
+    });
     return res.status(201).json(team);
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -20,7 +24,19 @@ export const createTeam = async (req, res) => {
 
 export const getTeams = async (req, res) => {
   try {
-    const teams = await Team.find();
+    let filter = {};
+    if (req.user?.role === 'manager') {
+      filter = {
+        $or: [
+          { managerId: req.user.id },
+          { members: req.user.id }
+        ]
+      };
+    } else {
+      filter = { members: req.user?.id };
+    }
+
+    const teams = await Team.find(filter).populate('members', 'name email role');
     return res.status(200).json(teams);
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching teams', error: error.message });

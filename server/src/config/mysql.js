@@ -30,9 +30,7 @@ const connectMySQL = async () => {
 
     console.log('MySQL connected successfully');
   } catch (error) {
-    console.error('MySQL connection failed:', error.message);
-
-    process.exit(1);
+    console.warn('MySQL connection failed (Audit logs will be offline):', error.message);
   }
 };
 
