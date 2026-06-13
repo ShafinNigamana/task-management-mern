@@ -15,7 +15,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { getTasksByTeam, updateTaskStatus } from '../../services/taskService';
+import { getTasksByTeam, updateTaskStatus, createTask } from '../../services/taskService';
 import { getTeams, updateTeam } from '../../services/teamService';
 import { searchUsers } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
@@ -169,6 +169,17 @@ function TeamDetailPage() {
 
   const [team, setTeam] = useState(null);
 
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    assigneeId: '',
+    status: 'todo',
+    priority: 'medium',
+    dueDate: '',
+  });
+  const [taskModalError, setTaskModalError] = useState(null);
+
   // Track loading + dragging state for polling control
   const hasLoadedOnce = useRef(false);
   const isDragging = useRef(false);
@@ -295,6 +306,61 @@ function TeamDetailPage() {
     }
   };
 
+  const openCreateTaskModal = () => {
+    setTaskForm({
+      title: '',
+      description: '',
+      assigneeId: '',
+      status: 'todo',
+      priority: 'medium',
+      dueDate: '',
+    });
+    setTaskModalError(null);
+    setShowCreateTaskModal(true);
+  };
+
+  const closeCreateTaskModal = () => {
+    setShowCreateTaskModal(false);
+  };
+
+  const handleTaskFormChange = (e) => {
+    const { name, value } = e.target;
+    setTaskForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCreateTaskSubmit = async (e) => {
+    e.preventDefault();
+    if (!taskForm.title.trim()) {
+      setTaskModalError('Task title is required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setTaskModalError(null);
+      
+      const payload = {
+        title: taskForm.title.trim(),
+        description: taskForm.description.trim(),
+        assigneeId: taskForm.assigneeId || undefined,
+        status: taskForm.status,
+        priority: taskForm.priority,
+        dueDate: taskForm.dueDate || undefined,
+        teamId,
+      };
+
+      await createTask(payload);
+      setShowCreateTaskModal(false);
+      await fetchTasks();
+    } catch (err) {
+      setTaskModalError(err.response?.data?.message || 'Failed to create task.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ── Filtering ──
 
@@ -431,15 +497,24 @@ function TeamDetailPage() {
             {team && ` • ${team.members.length} members`}
           </p>
         </div>
-        {user?.role === 'manager' && (
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <button 
             type="button" 
-            className="btn-secondary" 
-            onClick={openMemberModal}
+            className="btn-primary" 
+            onClick={openCreateTaskModal}
           >
-            Manage Members
+            Create Task
           </button>
-        )}
+          {user?.role === 'manager' && (
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              onClick={openMemberModal}
+            >
+              Manage Members
+            </button>
+          )}
+        </div>
       </div>
       <div className="kanban-header" style={{ marginTop: 0, marginBottom: 'var(--space-8)' }}>
         <div className="kanban-filters">
@@ -565,6 +640,144 @@ function TeamDetailPage() {
                   className="btn-primary"
                 >
                   Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Task Modal */}
+      {showCreateTaskModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="modal-title">Create New Task</h2>
+              <button 
+                type="button" 
+                className="modal-close" 
+                onClick={closeCreateTaskModal}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTaskSubmit} className="auth-form" style={{ gap: 'var(--space-4)' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskTitle">Title <span style={{ color: 'var(--color-status-todo)' }}>*</span></label>
+                <input
+                  type="text"
+                  id="taskTitle"
+                  name="title"
+                  value={taskForm.title}
+                  onChange={handleTaskFormChange}
+                  placeholder="Task title"
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskDescription">Description</label>
+                <textarea
+                  id="taskDescription"
+                  name="description"
+                  value={taskForm.description}
+                  onChange={handleTaskFormChange}
+                  placeholder="Task description..."
+                  className="form-input"
+                  style={{ minHeight: '80px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskAssignee">Assignee</label>
+                <select
+                  id="taskAssignee"
+                  name="assigneeId"
+                  value={taskForm.assigneeId}
+                  onChange={handleTaskFormChange}
+                  className="form-select"
+                >
+                  <option value="">Unassigned</option>
+                  {/* Team Manager */}
+                  {team?.managerId && (
+                    <option key={team.managerId._id || team.managerId} value={team.managerId._id || team.managerId}>
+                      {team.managerId.name ? `${team.managerId.name} (Manager)` : 'Manager'}
+                    </option>
+                  )}
+                  {/* Team Members */}
+                  {team?.members?.map((m) => (
+                    // Avoid duplicating if manager is also in members array
+                    (m._id !== (team.managerId?._id || team.managerId)) && (
+                      <option key={m._id} value={m._id}>
+                        {m.name}
+                      </option>
+                    )
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="taskStatus">Status</label>
+                  <select
+                    id="taskStatus"
+                    name="status"
+                    value={taskForm.status}
+                    onChange={handleTaskFormChange}
+                    className="form-select"
+                  >
+                    <option value="todo">To Do</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="taskPriority">Priority</label>
+                  <select
+                    id="taskPriority"
+                    name="priority"
+                    value={taskForm.priority}
+                    onChange={handleTaskFormChange}
+                    className="form-select"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskDueDate">Due Date</label>
+                <input
+                  type="date"
+                  id="taskDueDate"
+                  name="dueDate"
+                  value={taskForm.dueDate}
+                  onChange={handleTaskFormChange}
+                  className="form-input"
+                />
+              </div>
+
+              {taskModalError && <div className="auth-error">{taskModalError}</div>}
+
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={closeCreateTaskModal}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  Create Task
                 </button>
               </div>
             </form>

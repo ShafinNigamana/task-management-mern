@@ -1,4 +1,5 @@
 import Team from '../models/Team.js';
+import User from '../models/User.js';
 
 export const createTeam = async (req, res) => {
   try {
@@ -24,8 +25,9 @@ export const createTeam = async (req, res) => {
 
 export const getTeams = async (req, res) => {
   try {
+    const dbUser = await User.findById(req.user.id);
     let filter = {};
-    if (req.user?.role === 'manager') {
+    if (dbUser?.role === 'manager') {
       filter = {
         $or: [
           { managerId: req.user.id },
@@ -36,7 +38,9 @@ export const getTeams = async (req, res) => {
       filter = { members: req.user?.id };
     }
 
-    const teams = await Team.find(filter).populate('members', 'name email role');
+    const teams = await Team.find(filter)
+      .populate('members', 'name email role')
+      .populate('managerId', 'name email role');
     return res.status(200).json(teams);
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching teams', error: error.message });
