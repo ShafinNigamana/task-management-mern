@@ -1,104 +1,123 @@
-# FUTURE_ENHANCEMENTS - VERSION 2
+# Version 2 SaaS Scale & Architecture Roadmap
 
-This document captures features and business logic that are required for a production-ready task management SaaS platform, combining both the original core expansion goals (V1) and advanced collaboration ideas (V2).
-
----
-
-# Current Project Scope
-
-The implemented system currently supports:
-* Authentication (Login / Signup)
-* JWT Authorization & Role-Based access control
-* Protected Routes
-* Dashboard
-* Teams List
-* Team Kanban Board (Drag and Drop status updates)
-* Activity Feed (MySQL Audit Logs)
-* Reports Dashboard (Recharts & CSV Export)
-* Audit Logging (MySQL actions)
+This document outlines the detailed architectural designs, database schemas, and event structures planned for the Version 2 (SaaS) migration of the Team Task Management Platform.
 
 ---
 
-# Core Expansion Goals (V1 - Purely Local & Self-Contained)
+## 1. Collaborative Real-Time Synchronization (WebSockets)
 
-## 1. Team Management Module
-* **Future Work**: Managers should be able to create teams, edit team names, delete teams, and add/remove members from the frontend.
-* **Suggested UI**: Sidebar links for creation, Add Member Modals in Team Details page.
+### WebSocket Server Integration
+* **Protocol**: Integrate `socket.io` inside `server/src/server.js` by wrapping the standard Express HTTP server.
+* **Namespaces & Rooms**: Map socket rooms to Team IDs:
+  ```javascript
+  io.on('connection', (socket) => {
+    socket.on('join:team', (teamId) => {
+      socket.join(teamId);
+    });
+  });
+  ```
 
-## 2. Team Membership Restrictions
-* **Future Work**: Restrict visibility so that users can only view teams they belong to (or manage).
-* **Backend Logic**: Update `GET /api/teams` to filter by membership array.
-
-## 3. Task Creation Module
-* **Future Work**: Frontend UI to create tasks under specific teams.
-* **Suggested UI**: A "Create Task" button on the Kanban board heading that opens a task creation modal form (Title, Description, Assignee, Priority, Due Date).
-
-## 4. Task Assignment Workflow
-* **Future Work**: Interface for managers to assign/reassign tasks and inspect user workloads.
-
-## 5. Team-Based Task Visibility
-* **Future Work**: Ensure that users can only fetch or modify tasks belonging to teams they have membership in.
-* **Backend Logic**: Enforce strict query ownership checks in task middlewares.
-
-## 6. User Management Module
-* **Future Work**: Admin/Manager console to search users, view lists, and update roles.
-
-## 7. Team Invitations
-* **Future Work**: Flow to invite users to teams via in-app invitations (Manager -> Send Invite -> User Accepts -> Added).
-
-## 8. Comments System
-* **Future Work**: Discussion threads on tasks for team feedback and issue coordination.
-
-## 9. File Attachments (Local Disk Storage)
-* **Future Work**: Uploading attachments (PDFs, images, docs) to task cards. Files are stored directly on the server's local disk space (e.g. `/uploads` directory).
-* **V2 Move**: Cloud file storage (AWS S3, Cloudinary) is moved to V2.
-
-## 10. Notifications (In-App Only)
-* **Future Work**: Real-time or polled in-app notifications (bell icon alert menu) for task assignment, status updates, and due dates.
-* **V2 Move**: SMTP Email delivery (Nodemailer, SendGrid) is moved to V2.
-
-## 11. Advanced Reports
-* **Future Work**: Add metrics like average resolution times and individual productivity graphs.
-* **V2 Move**: External SLA compliance reporting is moved to V2.
-
-## 12. Audit Log Improvements
-* **Future Work**: Audit additional events like logins, logouts, team lifecycle changes, and membership additions.
-
-## 13. Role Hierarchy Expansion
-* **Future Work**: Add hierarchical roles: `super_admin` > `manager` > `team_lead` > `member`. Enforced locally in `restrictTo` middleware.
-
-## 14. Security Enhancements
-* **Future Work**: Implement Refresh Tokens, Session Listings, and Account Lockouts.
-* **V2 Move**: Email-based Password Resets and Email Verification are moved to V2.
-
-## 15. Production Readiness
-* **Future Work**: Add Docker setups, local automated testing, API rate limiting, and standard error log files.
-* **V2 Move**: External SaaS error monitoring (Sentry, Datadog) is moved to V2.
+### Real-Time Broadcast Events
+When task modifications or discussions occur, the backend will emit events to the target Team room:
+* `task:created`: Broadcasts new task document metadata to instantly add a card on active client boards.
+* `task:moved`: Emits event containing `{ taskId, sourceStatus, targetStatus }` to synchronize drag-and-drop movements for users currently viewing the same board.
+* `comment:added`: Emits `{ commentId, taskId, authorName, text }` to append comments to open detail panels without manual refresh.
+* `presence:update`: Emits the list of user profile initials currently viewing the same team namespace. Client updates a top-right visual avatar list.
 
 ---
 
-# Advanced SaaS & External Enhancements (V2)
+## 2. Task Dependencies & Checklists (V2 Models)
 
-## 16. Task Dependencies & Subtask Checklists
-* **Future Work**:
-  * **Subtasks**: Nested checkbox lists inside tasks with a progress percentage bar.
-  * **Dependencies**: Block task transitions to "Done" if blocked by an uncompleted dependency task.
+### Subtask Checklist Subdocument
+Add checking arrays directly inside the task database schema:
+* **Task Schema Update**:
+  ```javascript
+  subtasks: [
+    {
+      title: { type: String, required: true },
+      isCompleted: { type: Boolean, default: false },
+      completedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    }
+  ]
+  ```
+* **Frontend Component**: Displays subtask lists on cards as `(completedCount / totalCount)`. Checking a box triggers a `PATCH` update, recalculating a progress bar.
 
-## 17. Real-Time Collaboration (WebSockets)
-* **Future Work**:
-  * **Instant sync**: Board changes, feed events, and updates broadcast instantly via Socket.io.
-  * **Co-Presence**: Show avatars of team members currently viewing the same Kanban board.
+### Task Dependencies Linkages
+Allows linking blocking tasks to other tasks:
+* **Task Schema Update**:
+  ```javascript
+  dependencies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }]
+  ```
+* **Backend State Blocker (Middleware)**:
+  Before transitioning status from `'in-progress'` to `'done'`, a pre-save check verifies if all referenced dependency tasks are in a `'done'` status. If any are incomplete, it rejects the update with `400 Task blocked by parent task dependency`.
 
-## 18. Integrated Time Tracking
-* **Future Work**: A stopwatch feature on task cards to log active development time and generate timesheets.
+---
 
-## 19. Interface Personalization & Dark Mode
-* **Future Work**: LocalStorage-saved Theme toggles enabling light, dark, and system-default layouts.
+## 3. stopwatch Time Tracking
 
-## 20. AI Task Copilot
-* **Future Work**: Auto-drafting task templates from titles and providing managers with weekly Standup digests of team activity.
+### Time Log Array Schema
+Tracks time spent on tasks by developer:
+* **Task Schema Update**:
+  ```javascript
+  timeLogs: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      startAt: { type: Date, required: true },
+      endAt: { type: Date },
+      durationSeconds: { type: Number, default: 0 }
+    }
+  ]
+  ```
+* **Timer Operations API**:
+  * `POST /api/tasks/:id/time/start`: Creates a time log entry with `startAt = Date.now()`. Rejects if a timer is already active.
+  * `POST /api/tasks/:id/time/stop`: Sets `endAt = Date.now()`, computes the delta in seconds, adds it to `durationSeconds`, and recalculates the task's total accumulated time.
 
-## 21. External & Cloud Services Integration (Moved from V1)
-* **AWS S3 / Cloudinary**: Cloud-based file storage for task attachments to replace local server file directories.
-* **Nodemailer / SendGrid**: Email notifications for notifications (due dates, assignments) and password reset/email verification flows.
-* **Sentry / Datadog**: Professional SaaS error logs, application performance monitoring (APM), and health tracking.
+---
+
+## 4. Cloud Infrastructure Migrations
+
+### AWS S3 / Cloudinary File Storage
+Replaces local server storage `./uploads`:
+* **AWS SDK Integrations**: Use `@aws-sdk/client-s3` and `multer-s3` in the backend upload middleware.
+* **Upload Mechanism**: File streams pipe directly to an S3 bucket. Access endpoints saved to database records point to Cloudfront CDN or S3 URLs.
+
+### Nodemailer / SendGrid Email Notifications
+* **SMTP Client**: Set up a nodemailer transport or SendGrid API client wrapper.
+* **Background Worker**: Offload email processing to a background message broker (like Redis-backed `bull-mq`) to send transactional notifications (e.g. task due warning digests, password reset links).
+
+### Sentry Exception Logs
+* **Instrumentation**: Integrate `@sentry/node` on the server and `@sentry/react` on the client.
+* **Error Handling**: Connect Sentry's request handlers before standard router middlewares to log server exception stacks.
+
+---
+
+## 5. Docker Containers Deployment (Production Scaling)
+
+### Server Dockerfile
+Multi-stage build compiling Express dependencies:
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY server/package.json ./server/
+RUN npm install -g pnpm && pnpm install --filter server...
+COPY server/ ./server/
+RUN pnpm --filter server build
+
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/server ./server
+EXPOSE 5000
+CMD ["node", "server/src/server.js"]
+```
+
+### Client Dockerfile & Nginx Proxy
+A multi-stage Docker build compiling Vite assets and serving them via Nginx:
+* **Nginx Configuration**: Configures Nginx to listen on port 80, serving static build output, and proxies `/api` endpoints to backend upstream endpoints to prevent CORS issues.
+
+### Orchestration (`docker-compose.yml`)
+Spins up the complete container environment:
+* `mongodb`: Containerized local MongoDB database.
+* `mysql`: MySQL container holding audit database tables.
+* `server`: Task manager backend service.
+* `client`: Client frontend container running Nginx, exposed on port 80.
