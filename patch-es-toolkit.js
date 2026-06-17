@@ -1,11 +1,21 @@
 const fs = require('fs');
 const path = require('path');
 
-const baseDir = path.resolve(__dirname, 'node_modules/.pnpm/es-toolkit@1.47.0/node_modules/es-toolkit/dist');
+const possiblePaths = [
+  path.resolve(__dirname, 'node_modules/es-toolkit/dist'),
+  path.resolve(__dirname, 'node_modules/.pnpm/es-toolkit@1.47.0/node_modules/es-toolkit/dist'),
+  path.resolve(__dirname, 'client/node_modules/es-toolkit/dist'),
+  path.resolve(__dirname, 'client/node_modules/.pnpm/es-toolkit@1.47.0/node_modules/es-toolkit/dist'),
+  path.resolve(__dirname, '../node_modules/es-toolkit/dist'),
+  path.resolve(__dirname, '../node_modules/.pnpm/es-toolkit@1.47.0/node_modules/es-toolkit/dist')
+];
 
-if (!fs.existsSync(baseDir)) {
-  console.error(`Base directory does not exist: ${baseDir}`);
-  process.exit(1);
+const baseDir = possiblePaths.find(p => fs.existsSync(p));
+
+if (!baseDir) {
+  console.log('Tested paths:', possiblePaths);
+  console.error(`Base directory for es-toolkit dist not found. Skipping patch.`);
+  process.exit(0); // exit 0 so it doesn't break the build if es-toolkit is not installed or not present
 }
 
 function walkDir(dir, callback) {
