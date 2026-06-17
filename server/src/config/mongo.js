@@ -34,7 +34,8 @@ const connectMongoDB = async () => {
       console.log(`MongoDB DNS servers: ${servers.join(', ')}`);
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    await mongoose.connect(uri);
 
     console.log('MongoDB connected successfully');
   } catch (error) {
