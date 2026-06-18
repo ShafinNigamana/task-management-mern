@@ -106,7 +106,7 @@ TaskSphere uses a hybrid database design separating operational states (NoSQL) f
 
 <div align="center">
 
-![TaskSphere Architecture](./docs/architecture/taskSphere-architecture.png)
+![TaskSphere Architecture](./docs/architecture/taskSphere-architecture-v2.png)
 
 </div>
 
