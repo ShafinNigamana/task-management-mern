@@ -104,26 +104,11 @@
 
 TaskSphere uses a hybrid database design separating operational states (NoSQL) from audit logging history (Relational SQL):
 
-```
-                       ┌─────────────────────────┐
-                       │     React Frontend      │
-                       │     (Vite / Vercel)     │
-                       └────────────┬────────────┘
-                                    │ Axios HTTPS
-                                    ▼
-                       ┌─────────────────────────┐
-                       │     Express Backend     │
-                       │        (Render)         │
-                       └──────┬───────────┬──────┘
-                              │           │
-           Mongoose queries   │           │ mysql2 connection
-                              ▼           ▼
-                   ┌─────────────┐     ┌─────────────┐
-                   │   MongoDB   │     │    MySQL    │
-                   │    Atlas    │     │ Audit Store │
-                   │(Users/Tasks)│     │ (Activity)  │
-                   └─────────────┘     └─────────────┘
-```
+<div align="center">
+
+![TaskSphere Architecture](./docs/architecture/taskSphere-architecture.png)
+
+</div>
 
 ---
 
