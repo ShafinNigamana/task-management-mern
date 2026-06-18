@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getMetrics, exportMetrics } from '../../services/reportService';
+import { ReportsSkeleton } from '../../components/Skeleton';
 import {
   ResponsiveContainer,
   BarChart,
@@ -7,6 +8,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
 } from 'recharts';
 
 export default function ReportsPage() {
@@ -50,16 +52,7 @@ export default function ReportsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="reports-container">
-        <div className="reports-header-wrapper">
-          <div className="reports-header">
-            <h1 className="reports-title">Reports</h1>
-          </div>
-        </div>
-        <div className="loading-text">Loading report metrics...</div>
-      </div>
-    );
+    return <ReportsSkeleton />;
   }
 
   if (error) {
@@ -93,7 +86,7 @@ export default function ReportsPage() {
         <button 
           onClick={handleExport} 
           disabled={exporting}
-          className="btn-export"
+          className="btn btn-secondary"
         >
           {exporting ? 'Exporting...' : 'Export CSV'}
         </button>
@@ -110,10 +103,11 @@ export default function ReportsPage() {
               </span>
             </div>
           ) : (
-            <div className="reports-card" style={{ padding: '20px 16px 10px 16px' }}>
-              <div style={{ width: '100%', height: 220 }}>
+            <div className="reports-card reports-card--chart">
+              <div className="reports-chart-container">
                 <ResponsiveContainer>
                   <BarChart data={chartData} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" vertical={false} />
                     <XAxis 
                       dataKey="name" 
                       stroke="var(--color-text-muted)" 

@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAuditLogs } from '../services/auditService';
+import { Skeleton } from './Skeleton';
+import EmptyState from './EmptyState';
 
 function formatActionText(log) {
   const payload = typeof log.payload_json === 'string'
@@ -95,7 +97,14 @@ export default function ActivityFeed({ teamId }) {
     return (
       <div className="activity-feed-section">
         <h2 className="activity-feed-title">Recent Activity</h2>
-        <div className="activity-loading">Loading activity feed...</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} style={{ padding: '12px 16px', background: 'var(--color-surface)' }}>
+              <Skeleton width="180px" height="14px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="100px" height="10px" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -111,6 +120,19 @@ export default function ActivityFeed({ teamId }) {
     );
   }
 
+  const getActionInfo = (action) => {
+    switch (action) {
+      case 'CREATE_TASK':
+        return { className: 'activity-feed-item--create', icon: '+' };
+      case 'UPDATE_TASK':
+        return { className: 'activity-feed-item--update', icon: '↻' };
+      case 'DELETE_TASK':
+        return { className: 'activity-feed-item--delete', icon: '×' };
+      default:
+        return { className: '', icon: '•' };
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -118,22 +140,26 @@ export default function ActivityFeed({ teamId }) {
       <h2 className="activity-feed-title">Recent Activity</h2>
 
       {logs.length === 0 ? (
-        <div className="activity-feed-list">
-          <div className="activity-feed-item">
-            <div className="activity-item-content text-muted" style={{ color: 'var(--color-text-muted)' }}>
-              No recent activity.
-            </div>
-          </div>
-        </div>
+        <EmptyState 
+          type="activity" 
+          title="No activity yet" 
+          description="Actions on this team will appear here." 
+        />
       ) : (
         <>
           <div className="activity-feed-list">
-            {logs.map((log) => (
-              <div key={log.id} className="activity-feed-item">
-                <span className="activity-item-content">{formatActionText(log)}</span>
-                <span className="activity-item-time">{formatRelativeTime(log.created_at)}</span>
-              </div>
-            ))}
+            {logs.map((log) => {
+              const info = getActionInfo(log.action);
+              return (
+                <div key={log.id} className={`activity-feed-item ${info.className}`}>
+                  <span className="activity-item-content">
+                    <span className="activity-item-icon">{info.icon}</span>
+                    {formatActionText(log)}
+                  </span>
+                  <span className="activity-item-time">{formatRelativeTime(log.created_at)}</span>
+                </div>
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
@@ -144,7 +170,7 @@ export default function ActivityFeed({ teamId }) {
               <div className="pagination-controls">
                 <button
                   type="button"
-                  className="pagination-btn"
+                  className="btn btn-ghost pagination-btn"
                   onClick={() => setPage((p) => Math.max(p - 1, 1))}
                   disabled={page === 1}
                 >
@@ -152,7 +178,7 @@ export default function ActivityFeed({ teamId }) {
                 </button>
                 <button
                   type="button"
-                  className="pagination-btn"
+                  className="btn btn-ghost pagination-btn"
                   onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                   disabled={page === totalPages}
                 >
