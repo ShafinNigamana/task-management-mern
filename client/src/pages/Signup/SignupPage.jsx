@@ -62,7 +62,7 @@ function SignupPage() {
               className="form-input"
               value={formData.name}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Ashok Sharma"
               autoComplete="name"
             />
           </div>
