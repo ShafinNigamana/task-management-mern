@@ -15,9 +15,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { getTasksByTeam, updateTaskStatus } from '../../services/taskService';
+import { getTasksByTeam, updateTaskStatus, createTask } from '../../services/taskService';
+import { getTeams, updateTeam } from '../../services/teamService';
+import { searchUsers } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import ActivityFeed from '../../components/ActivityFeed';
+import TaskDetailModal from '../../components/TaskDetailModal';
 
 // Column definitions — maps to Task model status enum
 const COLUMNS = [
@@ -68,7 +71,7 @@ function isOverdue(task) {
 
 // ─── TaskCard (rendered inside SortableContext) ────────────
 
-function SortableTaskCard({ task }) {
+function SortableTaskCard({ task, onClick }) {
   const {
     attributes,
     listeners,
@@ -90,6 +93,7 @@ function SortableTaskCard({ task }) {
       className={`kanban-card ${isDragging ? 'kanban-card--dragging' : ''}`}
       {...attributes}
       {...listeners}
+      onClick={onClick}
     >
       <TaskCardContent task={task} />
     </div>
@@ -119,7 +123,7 @@ function TaskCardContent({ task }) {
 
 // ─── KanbanColumn ──────────────────────────────────────────
 
-function KanbanColumn({ column, tasks, isOver }) {
+function KanbanColumn({ column, tasks, isOver, onCardClick }) {
   const taskIds = tasks.map((t) => t._id);
 
   const { setNodeRef } = useDroppable({
@@ -138,7 +142,7 @@ function KanbanColumn({ column, tasks, isOver }) {
             <div className="kanban-column-empty">No tasks</div>
           ) : (
             tasks.map((task) => (
-              <SortableTaskCard key={task._id} task={task} />
+              <SortableTaskCard key={task._id} task={task} onClick={() => onCardClick(task)} />
             ))
           )}
         </div>
@@ -153,11 +157,34 @@ function TeamDetailPage() {
   const { id: teamId } = useParams();
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
   const [overColumnId, setOverColumnId] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
+
+  // Task details modal state
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  // Team member management states
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [memberModalError, setMemberModalError] = useState(null);
+
+  // Task creation states
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    assigneeId: '',
+    status: 'todo',
+    priority: 'medium',
+    dueDate: '',
+  });
+  const [taskModalError, setTaskModalError] = useState(null);
 
   // Track loading + dragging state for polling control
   const hasLoadedOnce = useRef(false);
@@ -169,6 +196,8 @@ function TeamDetailPage() {
     setPrevTeamId(teamId);
     setLoading(true);
     setError(null);
+    setSelectedTask(null);
+    setTeam(null);
   }
 
   // Reset loaded tracker on team changes inside effect to avoid ref-in-render violations
@@ -178,6 +207,23 @@ function TeamDetailPage() {
 
   // ── Data fetching ──
 
+  const fetchTeamDetails = useCallback(async () => {
+    try {
+      const teams = await getTeams();
+      const currentTeam = teams.find((t) => t._id === teamId);
+      if (!currentTeam) {
+        setError("Access Denied: You do not belong to this team");
+        setTeam(null);
+        setLoading(false);
+        return;
+      }
+      setTeam(currentTeam);
+      setSelectedMembers(currentTeam.members || []);
+    } catch {
+      setError("Failed to load team details");
+    }
+  }, [teamId]);
+
   const fetchTasks = useCallback(async () => {
     // Skip polling refresh while user is dragging to avoid state conflicts
     if (isDragging.current) return;
@@ -185,11 +231,12 @@ function TeamDetailPage() {
     try {
       const data = await getTasksByTeam(teamId);
       setTasks(data);
-      setError(null);
       hasLoadedOnce.current = true;
-    } catch {
-      if (!hasLoadedOnce.current) {
-        setError('Failed to load board.');
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setError("Access Denied: You do not belong to this team");
+      } else if (!hasLoadedOnce.current) {
+        setError("Failed to load board.");
       }
     } finally {
       setLoading(false);
@@ -199,11 +246,15 @@ function TeamDetailPage() {
   // Initial fetch + 5-second polling (No synchronous state setting in the effect)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTeamDetails();
     fetchTasks();
 
-    const interval = setInterval(fetchTasks, 5000);
+    const interval = setInterval(() => {
+      fetchTeamDetails();
+      fetchTasks();
+    }, 5000);
     return () => clearInterval(interval);
-  }, [fetchTasks]);
+  }, [fetchTeamDetails, fetchTasks]);
 
   // ── Filtering ──
 
@@ -229,6 +280,101 @@ function TeamDetailPage() {
 
   const filteredTasks = applyFilter(tasks);
 
+  // ── Member Search Drawer effect with debouncing ──
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (!val.trim()) {
+      setSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const users = await searchUsers(searchQuery);
+        const filtered = users.filter(
+          (u) => !selectedMembers.some((sm) => sm._id === u._id)
+        );
+        setSearchResults(filtered);
+      } catch {
+        // Fail silently
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedMembers]);
+
+  const handleAddMember = (member) => {
+    setSelectedMembers((prev) => [...prev, member]);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const handleRemoveMember = (memberId) => {
+    setSelectedMembers((prev) => prev.filter((m) => m._id !== memberId));
+  };
+
+  const handleUpdateRoster = async (e) => {
+    e.preventDefault();
+    try {
+      setMemberModalError(null);
+      await updateTeam(teamId, {
+        name: team.name,
+        members: selectedMembers.map((m) => m._id),
+      });
+      setShowMemberModal(false);
+      fetchTeamDetails();
+    } catch (err) {
+      setMemberModalError(err.response?.data?.message || 'Failed to update roster.');
+    }
+  };
+
+  // ── Task Creation Submission ──
+
+  const handleTaskFormChange = (e) => {
+    const { name, value } = e.target;
+    setTaskForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateTaskSubmit = async (e) => {
+    e.preventDefault();
+    if (!taskForm.title.trim()) return;
+
+    try {
+      setTaskModalError(null);
+      setLoading(true);
+      await createTask({
+        ...taskForm,
+        teamId,
+      });
+      closeCreateTaskModal();
+      fetchTasks();
+    } catch (err) {
+      setTaskModalError(err.response?.data?.message || 'Failed to create task.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeCreateTaskModal = () => {
+    setShowCreateTaskModal(false);
+    setTaskForm({
+      title: '',
+      description: '',
+      assigneeId: '',
+      status: 'todo',
+      priority: 'medium',
+      dueDate: '',
+    });
+    setTaskModalError(null);
+  };
+
   // ── Drag and drop ──
 
   const sensors = useSensors(
@@ -253,18 +399,28 @@ function TeamDetailPage() {
     return findColumnForTask(over.id);
   }
 
+  // Auth helper: checks if user is manager/member of current team
+  const isMemberOrManager = team && (
+    team.managerId?._id === user?._id ||
+    team.managerId === user?._id ||
+    team.members?.some(m => m === user?._id || m._id === user?._id)
+  );
+
   function handleDragStart(event) {
+    if (!isMemberOrManager) return; // Prevent drag if not in team
     isDragging.current = true;
     const task = tasks.find((t) => t._id === event.active.id);
     setActiveTask(task || null);
   }
 
   function handleDragOver(event) {
+    if (!isMemberOrManager) return;
     const targetCol = getTargetColumn(event.over);
     setOverColumnId(targetCol);
   }
 
   async function handleDragEnd(event) {
+    if (!isMemberOrManager) return;
     isDragging.current = false;
     setActiveTask(null);
     setOverColumnId(null);
@@ -314,7 +470,7 @@ function TeamDetailPage() {
 
   // ── Render ──
 
-  if (loading) {
+  if (loading && tasks.length === 0) {
     return (
       <div className="kanban-container">
         <p className="loading-text">Loading board...</p>
@@ -333,11 +489,40 @@ function TeamDetailPage() {
   return (
     <div className="kanban-container">
       <div className="kanban-header">
-        <h1 className="kanban-title">Board</h1>
-        <p className="kanban-subtitle">
-          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} across {COLUMNS.length} columns
-        </p>
-        <div className="kanban-filters">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 className="kanban-title">{team ? team.name : 'Board'}</h1>
+            <p className="kanban-subtitle" style={{ marginTop: 'var(--space-1)', marginBottom: 'var(--space-2)' }}>
+              {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} across {COLUMNS.length} columns
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            {user?.role === 'manager' && (
+              <button 
+                type="button" 
+                className="btn-secondary"
+                onClick={() => {
+                  if (team) {
+                    setSelectedMembers(team.members || []);
+                  }
+                  setShowMemberModal(true);
+                }}
+              >
+                Manage Members
+              </button>
+            )}
+            {isMemberOrManager && (
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={() => setShowCreateTaskModal(true)}
+              >
+                Create Task
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="kanban-filters" style={{ marginTop: 'var(--space-2)' }}>
           {FILTERS.map((filter) => (
             <button
               key={filter.id}
@@ -366,6 +551,7 @@ function TeamDetailPage() {
               column={column}
               tasks={getTasksForColumn(column.id)}
               isOver={overColumnId === column.id}
+              onCardClick={(task) => setSelectedTask(task)}
             />
           ))}
         </div>
@@ -378,7 +564,240 @@ function TeamDetailPage() {
           ) : null}
         </DragOverlay>
       </DndContext>
+      
       <ActivityFeed key={teamId} teamId={teamId} />
+
+      {/* Task Details Modal */}
+      {selectedTask && team && (
+        <TaskDetailModal
+          task={selectedTask}
+          team={team}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={fetchTasks}
+        />
+      )}
+
+      {/* Manage Members Modal */}
+      {showMemberModal && team && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="modal-title">Manage Team Members</h2>
+              <button 
+                type="button" 
+                className="modal-close" 
+                onClick={() => setShowMemberModal(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateRoster} className="auth-form" style={{ gap: 'var(--space-4)' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="memberSearch">Search Members</label>
+                <input
+                  type="text"
+                  id="memberSearch"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search members by name or email..."
+                  className="form-input"
+                  autoComplete="off"
+                />
+                {searchResults.length > 0 && (
+                  <div className="search-results-list">
+                    {searchResults.map((u) => (
+                      <div 
+                        key={u._id} 
+                        className="search-result-item"
+                        onClick={() => handleAddMember(u)}
+                      >
+                        <span className="search-result-name">{u.name}</span>
+                        <span className="search-result-email">{u.email}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Team Members</label>
+                {selectedMembers.length === 0 ? (
+                  <p style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', margin: 0 }}>No members in this team.</p>
+                ) : (
+                  <div className="selected-members-list">
+                    {selectedMembers.map((m) => (
+                      <div key={m._id} className="member-pill">
+                        <span>{m.name}</span>
+                        <button 
+                          type="button" 
+                          className="member-pill-remove" 
+                          onClick={() => handleRemoveMember(m._id)}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {memberModalError && <div className="auth-error">{memberModalError}</div>}
+
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={() => setShowMemberModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Task Modal */}
+      {showCreateTaskModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="modal-title">Create New Task</h2>
+              <button 
+                type="button" 
+                className="modal-close" 
+                onClick={closeCreateTaskModal}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTaskSubmit} className="auth-form" style={{ gap: 'var(--space-4)' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskTitle">Title <span style={{ color: 'var(--color-status-todo)' }}>*</span></label>
+                <input
+                  type="text"
+                  id="taskTitle"
+                  name="title"
+                  value={taskForm.title}
+                  onChange={handleTaskFormChange}
+                  placeholder="Task title"
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskDescription">Description</label>
+                <textarea
+                  id="taskDescription"
+                  name="description"
+                  value={taskForm.description}
+                  onChange={handleTaskFormChange}
+                  placeholder="Task description..."
+                  className="form-input"
+                  style={{ minHeight: '80px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskAssignee">Assignee</label>
+                <select
+                  id="taskAssignee"
+                  name="assigneeId"
+                  value={taskForm.assigneeId}
+                  onChange={handleTaskFormChange}
+                  className="form-select"
+                >
+                  <option value="">Unassigned</option>
+                  {team?.managerId && (
+                    <option key={team.managerId._id || team.managerId} value={team.managerId._id || team.managerId}>
+                      {team.managerId.name ? `${team.managerId.name} (Manager)` : 'Manager'}
+                    </option>
+                  )}
+                  {team?.members?.map((m) => (
+                    (m._id !== (team.managerId?._id || team.managerId)) && (
+                      <option key={m._id} value={m._id}>
+                        {m.name}
+                      </option>
+                    )
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="taskStatus">Status</label>
+                  <select
+                    id="taskStatus"
+                    name="status"
+                    value={taskForm.status}
+                    onChange={handleTaskFormChange}
+                    className="form-select"
+                  >
+                    <option value="todo">To Do</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="taskPriority">Priority</label>
+                  <select
+                    id="taskPriority"
+                    name="priority"
+                    value={taskForm.priority}
+                    onChange={handleTaskFormChange}
+                    className="form-select"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="taskDueDate">Due Date</label>
+                <input
+                  type="date"
+                  id="taskDueDate"
+                  name="dueDate"
+                  value={taskForm.dueDate}
+                  onChange={handleTaskFormChange}
+                  className="form-input"
+                />
+              </div>
+
+              {taskModalError && <div className="auth-error">{taskModalError}</div>}
+
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={closeCreateTaskModal}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  Create Task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

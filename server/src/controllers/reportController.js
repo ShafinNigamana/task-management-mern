@@ -1,33 +1,52 @@
 import { createMySQLPool } from '../config/mysql.js';
 import User from '../models/User.js';
 import Task from '../models/Task.js';
+import Team from '../models/Team.js';
 import mongoose from 'mongoose';
 
 export const getReportMetrics = async (req, res) => {
   try {
     const pool = createMySQLPool();
 
-    // 1. Metric 1: Tasks Closed Per Week
+    // Fetch teams managed by current manager
+    const managedTeams = await Team.find({ managerId: req.user.id });
+    if (managedTeams.length === 0) {
+      return res.status(200).json({
+        tasksClosedPerWeek: [],
+        topContributors: [],
+        overdueRate: {
+          totalActive: 0,
+          overdue: 0,
+          rate: 0,
+        },
+      });
+    }
+
+    const teamIds = managedTeams.map((t) => t._id.toString());
+
+    // 1. Metric 1: Tasks Closed Per Week (MySQL)
     const [closedRows] = await pool.query(`
       SELECT 
         YEARWEEK(created_at, 1) AS week,
         COUNT(*) AS closed_count
       FROM audit_log
       WHERE action = 'UPDATE_TASK'
+        AND team_id IN (?)
         AND JSON_UNQUOTE(JSON_EXTRACT(payload_json, '$.updatedFields.status')) = 'done'
       GROUP BY YEARWEEK(created_at, 1)
       ORDER BY week DESC
-    `);
+    `, [teamIds]);
 
-    // 2. Metric 2: Top 5 Contributors
+    // 2. Metric 2: Top 5 Contributors (MySQL)
     const [contributorRows] = await pool.query(`
       SELECT actor_id, COUNT(*) AS actions
       FROM audit_log
       WHERE actor_id != 'SYSTEM'
+        AND team_id IN (?)
       GROUP BY actor_id
       ORDER BY actions DESC
       LIMIT 5
-    `);
+    `, [teamIds]);
 
     // Fetch user details for contributors from MongoDB
     const userIds = contributorRows
@@ -44,8 +63,9 @@ export const getReportMetrics = async (req, res) => {
     }));
 
     // 3. Metric 3: Overdue Rate (using MongoDB Task data)
-    const totalActive = await Task.countDocuments({ status: { $ne: 'done' } });
+    const totalActive = await Task.countDocuments({ teamId: { $in: teamIds }, status: { $ne: 'done' } });
     const overdue = await Task.countDocuments({
+      teamId: { $in: teamIds },
       status: { $ne: 'done' },
       dueDate: { $lt: new Date() },
     });
@@ -71,6 +91,26 @@ export const exportReportMetrics = async (req, res) => {
   try {
     const pool = createMySQLPool();
 
+    // Fetch teams managed by current manager
+    const managedTeams = await Team.find({ managerId: req.user.id });
+    if (managedTeams.length === 0) {
+      let csvContent = 'Section,Metric,Value\n';
+      csvContent += 'Tasks Closed Per Week,, \n';
+      csvContent += ',, \n';
+      csvContent += 'Top Contributors,, \n';
+      csvContent += ',, \n';
+      csvContent += 'Overdue Rate,, \n';
+      csvContent += 'Overdue Rate,Total Active Tasks,0\n';
+      csvContent += 'Overdue Rate,Overdue Tasks,0\n';
+      csvContent += 'Overdue Rate,Overdue Percentage,0.0%\n';
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=report-metrics.csv');
+      return res.send(csvContent);
+    }
+
+    const teamIds = managedTeams.map((t) => t._id.toString());
+
     // 1. Fetch Weekly Closed Tasks
     const [closedRows] = await pool.query(`
       SELECT 
@@ -78,20 +118,22 @@ export const exportReportMetrics = async (req, res) => {
         COUNT(*) AS closed_count
       FROM audit_log
       WHERE action = 'UPDATE_TASK'
+        AND team_id IN (?)
         AND JSON_UNQUOTE(JSON_EXTRACT(payload_json, '$.updatedFields.status')) = 'done'
       GROUP BY YEARWEEK(created_at, 1)
       ORDER BY week DESC
-    `);
+    `, [teamIds]);
 
     // 2. Fetch Top Contributors
     const [contributorRows] = await pool.query(`
       SELECT actor_id, COUNT(*) AS actions
       FROM audit_log
       WHERE actor_id != 'SYSTEM'
+        AND team_id IN (?)
       GROUP BY actor_id
       ORDER BY actions DESC
       LIMIT 5
-    `);
+    `, [teamIds]);
 
     const userIds = contributorRows
       .map((row) => row.actor_id)
@@ -101,8 +143,9 @@ export const exportReportMetrics = async (req, res) => {
     const userMap = new Map(users.map((u) => [u._id.toString(), u.name]));
 
     // 3. Overdue Rate
-    const totalActive = await Task.countDocuments({ status: { $ne: 'done' } });
+    const totalActive = await Task.countDocuments({ teamId: { $in: teamIds }, status: { $ne: 'done' } });
     const overdue = await Task.countDocuments({
+      teamId: { $in: teamIds },
       status: { $ne: 'done' },
       dueDate: { $lt: new Date() },
     });

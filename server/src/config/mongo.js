@@ -1,6 +1,8 @@
 import dns from 'node:dns';
 
 import mongoose from 'mongoose';
+import Team from '../models/Team.js';
+import User from '../models/User.js';
 
 const DEFAULT_DNS_SERVERS = ['8.8.8.8', '1.1.1.1'];
 
@@ -26,6 +28,38 @@ const applyDnsServers = () => {
   return { servers: dns.getServers(), source: 'system' };
 };
 
+const runMigrations = async () => {
+  try {
+    const unownedTeamsCount = await Team.countDocuments({
+      $or: [
+        { managerId: { $exists: false } },
+        { managerId: null }
+      ]
+    });
+
+    if (unownedTeamsCount > 0) {
+      console.log(`Found ${unownedTeamsCount} unowned teams. Running migration...`);
+      const defaultManager = await User.findOne({ role: 'manager' });
+      if (defaultManager) {
+        const result = await Team.updateMany(
+          {
+            $or: [
+              { managerId: { $exists: false } },
+              { managerId: null }
+            ]
+          },
+          { $set: { managerId: defaultManager._id } }
+        );
+        console.log(`Successfully migrated ${result.modifiedCount} teams to default manager (${defaultManager.email})`);
+      } else {
+        console.warn('Migration warning: No user with role of "manager" found in database to assign team ownership.');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to execute team ownership database migrations:', err.message);
+  }
+};
+
 const connectMongoDB = async () => {
   try {
     const { servers, source } = applyDnsServers();
@@ -38,6 +72,9 @@ const connectMongoDB = async () => {
     await mongoose.connect(uri);
 
     console.log('MongoDB connected successfully');
+    
+    // Trigger unowned teams migration
+    runMigrations();
   } catch (error) {
     console.error('MongoDB connection failed:', error.message);
 
