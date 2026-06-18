@@ -100,7 +100,7 @@
 
 ---
 
-## 📐 Architecture Overview
+## Architecture Overview
 
 TaskSphere uses a hybrid database design separating operational states (NoSQL) from audit logging history (Relational SQL):
 
