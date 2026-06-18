@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/authService';
+import TaskSphereLogo from '../../components/TaskSphereLogo';
 
 function SignupPage() {
   const [formData, setFormData] = useState({
@@ -44,12 +45,14 @@ function SignupPage() {
   return (
     <div className="app-container">
       <div className="auth-card auth-card--signup">
-        <h1 className="auth-title">Task Management</h1>
+        <h1 className="auth-brand">
+          <TaskSphereLogo size={32} />
+        </h1>
         <p className="auth-subtitle">Create your account</p>
         
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="form-stack">
           <div className="form-group">
             <label htmlFor="name" className="form-label">Full Name</label>
             <input 
@@ -60,6 +63,7 @@ function SignupPage() {
               value={formData.name}
               onChange={handleChange}
               placeholder="John Doe"
+              autoComplete="name"
             />
           </div>
           
@@ -73,6 +77,7 @@ function SignupPage() {
               value={formData.email}
               onChange={handleChange}
               placeholder="you@example.com"
+              autoComplete="email"
             />
           </div>
 
@@ -86,6 +91,7 @@ function SignupPage() {
               value={formData.password}
               onChange={handleChange}
               placeholder="••••••••"
+              autoComplete="new-password"
             />
           </div>
 
@@ -101,12 +107,16 @@ function SignupPage() {
               <option value="member">Team Member</option>
               <option value="manager">Team Manager</option>
             </select>
+            <p className="form-helper-text" style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', marginTop: '2px', lineHeight: '1.4' }}>
+              Managers can create teams and manage members.
+            </p>
           </div>
 
           <button 
             type="submit" 
             disabled={isLoading}
-            className="auth-button"
+            className="btn btn-primary"
+            style={{ marginTop: 'var(--space-2)' }}
           >
             {isLoading ? 'Creating account...' : 'Create Account'}
           </button>

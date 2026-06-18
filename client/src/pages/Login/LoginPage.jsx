@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import TaskSphereLogo from '../../components/TaskSphereLogo';
 import authService from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
@@ -42,12 +43,14 @@ function LoginPage() {
   return (
     <div className="app-container">
       <div className="auth-card auth-card--login">
-        <h1 className="auth-title">Task Management</h1>
+        <h1 className="auth-brand">
+          <TaskSphereLogo size={32} />
+        </h1>
         <p className="auth-subtitle">Sign in to your account</p>
         
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="form-stack">
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email</label>
             <input 
@@ -57,6 +60,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              autoComplete="email"
             />
           </div>
           
@@ -69,13 +73,15 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              autoComplete="current-password"
             />
           </div>
           
           <button 
             type="submit" 
             disabled={isLoading}
-            className="auth-button"
+            className="btn btn-primary"
+            style={{ marginTop: 'var(--space-2)' }}
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
