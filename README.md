@@ -29,27 +29,27 @@ Access the live deployments of TaskSphere:
 ## 📸 Screenshots
 
 ### 1. Modern Login Interface
-![Login Page](https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80)
+![Login Page](docs/screenshots/login.png)
 *Clean, central card auth layout with complete password visibility toggling, error alerts, and manager/member onboarding.*
 
 ### 2. Information-Rich Dashboard
-![Dashboard](https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80)
+![Dashboard](docs/screenshots/dashboard.png)
 *Interactive welcome header greeting, 4-card metric grid (Total Teams, Total Tasks, My Tasks, Overdue count), and click-navigable recent tasks list.*
 
 ### 3. Collaboration Teams Directory
-![Teams Page](https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80)
+![Teams Page](docs/screenshots/teams.png)
 *Responsive grid featuring team card summaries (members, created dates, role-scoped details), manager modals, and debounced user searches.*
 
 ### 4. Interactive Kanban Board
-![Kanban Board](https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?auto=format&fit=crop&w=800&q=80)
+![Kanban Board](docs/screenshots/kanban.png)
 *Drag-and-drop workspace using `@dnd-kit` with column status indicators (To Do, In Progress, Done), left priority status border strips, and snap-scrolling on mobile viewports.*
 
-### 5. Task Detail Editor
-![Task Detail Page](https://images.unsplash.com/photo-1484480974693-2ca0a78f38b4?auto=format&fit=crop&w=800&q=80)
-*Overlay drawer supporting inline status/priority updates, assignee updates, and custom-styled deletion warning dialogs.*
+### 5. Create Task Interface
+![Create Task Page](docs/screenshots/create-task.png)
+*Central task creation modal supporting fields for title, description, assignee, status, priority, and due date.*
 
 ### 6. Analytics Reports Dashboard
-![Reports Dashboard](https://images.unsplash.com/photo-1543286386-7a3950385cc4?auto=format&fit=crop&w=800&q=80)
+![Reports Dashboard](docs/screenshots/reports.png)
 *Manager-only analytics metrics featuring Recharts weekly task performance, contributor leaderboards, active/overdue ratios, and scoped CSV exports.*
 
 ---
