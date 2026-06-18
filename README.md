@@ -336,7 +336,7 @@ Deploy the server folder to Render:
 ## ✍️ Author
 **Shafin Nigamana**
 * **GitHub**: [@ShafinNigamana](https://github.com/ShafinNigamana)
-* **LinkedIn**: [https://linkedin.com/in/shafinnigamana](https://linkedin.com/in/shafinnigamana)
+* **LinkedIn**: [https://linkedin.com/in/shafin-nigamana](https://www.linkedin.com/in/shafin-nigamana/)
 
 ---
 
