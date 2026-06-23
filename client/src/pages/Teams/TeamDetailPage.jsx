@@ -382,7 +382,7 @@ function TeamDetailPage() {
     }
   };
 
-  const closeCreateTaskModal = () => {
+  function closeCreateTaskModal() {
     setShowCreateTaskModal(false);
     setTaskForm({
       title: '',
@@ -393,7 +393,7 @@ function TeamDetailPage() {
       dueDate: '',
     });
     setTaskModalError(null);
-  };
+  }
 
   // ── Drag and drop ──
 

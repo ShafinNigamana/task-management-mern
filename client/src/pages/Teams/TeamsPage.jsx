@@ -87,14 +87,14 @@ function TeamsPage() {
     setSelectedMembers((prev) => prev.filter((m) => m._id !== memberId));
   };
 
-  const closeModal = () => {
+  function closeModal() {
     setShowModal(false);
     setNewTeamName('');
     setSearchQuery('');
     setSearchResults([]);
     setSelectedMembers([]);
     setModalError(null);
-  };
+  }
 
   const handleCreateTeam = async (e) => {
     e.preventDefault();
