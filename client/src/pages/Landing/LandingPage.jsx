@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ShieldCheck, FileStack, TrendingUp, ArrowRight, Play, Sparkles } from 'lucide-react';
 import TaskSphereLogo from '../../components/TaskSphereLogo';
 import Interactive3DTilt from '../../components/Interactive3DTilt';
 import {
@@ -338,25 +339,37 @@ export default function LandingPage() {
             className="hero-actions-container"
           >
             <Link to="/signup" className="btn btn-primary btn-lg">
-              Start for free
+              Start for free <ArrowRight size={16} />
             </Link>
             <a href="#sandbox-section" className="btn btn-secondary btn-lg">
-              Try Sandbox
+              <Play size={15} /> Try Sandbox
             </a>
           </motion.div>
         </div>
 
         {/* Floating Mockup Dashboard */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 60, rotateX: 8 }}
           animate={{
             opacity: 1,
-            y: [0, -12, 0],
+            y: [0, -18, 0],
+            rotateX: [2, -1, 2],
+            rotateY: [-1, 1, -1],
           }}
           transition={{
             opacity: { duration: 0.8, delay: 0.5 },
             y: {
-              duration: 6,
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            },
+            rotateX: {
+              duration: 7,
+              repeat: Infinity,
+              ease: "easeInOut"
+            },
+            rotateY: {
+              duration: 8,
               repeat: Infinity,
               ease: "easeInOut"
             }
@@ -581,7 +594,7 @@ export default function LandingPage() {
               variants={CARD_VARIANTS}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <div className="feature-icon" style={{ transform: 'translateZ(35px)', display: 'inline-block' }}>🔒</div>
+              <div className="feature-icon"><ShieldCheck size={26} strokeWidth={1.8} /></div>
               <h3 style={{ transform: 'translateZ(25px)' }}>Scoped Privacy Boundaries</h3>
               <p style={{ transform: 'translateZ(15px)' }}>
                 Managers only see managed teams, and members only see assigned cards. TaskSphere ensures strict information boundaries by default.
@@ -596,7 +609,7 @@ export default function LandingPage() {
               variants={CARD_VARIANTS}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <div className="feature-icon" style={{ transform: 'translateZ(35px)', display: 'inline-block' }}>📁</div>
+              <div className="feature-icon"><FileStack size={26} strokeWidth={1.8} /></div>
               <h3 style={{ transform: 'translateZ(25px)' }}>Relational Audit Logs</h3>
               <p style={{ transform: 'translateZ(15px)' }}>
                 Every card transition, priority reassignment, and status update is logged immutably in a relational database for audit compliance.
@@ -611,7 +624,7 @@ export default function LandingPage() {
               variants={CARD_VARIANTS}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <div className="feature-icon" style={{ transform: 'translateZ(35px)', display: 'inline-block' }}>📈</div>
+              <div className="feature-icon"><TrendingUp size={26} strokeWidth={1.8} /></div>
               <h3 style={{ transform: 'translateZ(25px)' }}>Advanced Manager Metrics</h3>
               <p style={{ transform: 'translateZ(15px)' }}>
                 Monitor team capacity, track overdue ratios, and download customized audit reports as CSV files instantly.
@@ -633,7 +646,7 @@ export default function LandingPage() {
           <h2>Streamline your team's workflow today.</h2>
           <p>Get started with TaskSphere for free. No credit card required.</p>
           <Link to="/signup" className="btn btn-primary btn-lg">
-            Create free account
+            <Sparkles size={16} /> Create free account
           </Link>
         </div>
       </motion.section>
