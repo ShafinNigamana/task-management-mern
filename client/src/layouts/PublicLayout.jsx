@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TaskSphereLogo from '../components/TaskSphereLogo';
 import SpotlightCursor from '../components/SpotlightCursor';
+import GridBackground from '../components/GridBackground';
 import { useState } from 'react';
 
 export default function PublicLayout() {
@@ -15,7 +16,8 @@ export default function PublicLayout() {
 
   return (
     <div className="public-layout-wrapper">
-      {/* Background Spotlight Glow */}
+      {/* Background Effects */}
+      <GridBackground />
       <SpotlightCursor />
 
       {/* Public Navigation Header */}
