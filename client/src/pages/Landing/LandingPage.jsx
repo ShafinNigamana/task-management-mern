@@ -79,7 +79,6 @@ function SortableSandboxTaskCard({ task, onDelete }) {
     <motion.div
       ref={setNodeRef}
       style={style}
-      layoutId={`sandbox-card-${task.id}`}
       layout
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
