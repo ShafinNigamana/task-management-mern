@@ -5,6 +5,7 @@ import { searchUsers } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { TeamsSkeleton } from '../../components/Skeleton';
 import EmptyState from '../../components/EmptyState';
+import { Users, Calendar, ArrowRight, Plus } from 'lucide-react';
 
 function TeamsPage() {
   const [teams, setTeams] = useState([]);
@@ -136,20 +137,20 @@ function TeamsPage() {
   };
 
   return (
-    <div className="teams-container">
+    <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="teams-header">
+      <div className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="teams-title">Teams</h1>
-          <p className="teams-subtitle">Manage user groups and team collaboration</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900 leading-none">Teams</h1>
+          <p className="mt-2 text-sm text-neutral-500">Manage user groups and team collaboration</p>
         </div>
         {user?.role === 'manager' && (
           <button 
             type="button" 
-            className="btn btn-primary" 
+            className="btn btn-primary flex items-center gap-1.5" 
             onClick={() => setShowModal(true)}
           >
-            Create Team
+            <Plus size={16} /> Create Team
           </button>
         )}
       </div>
@@ -164,27 +165,39 @@ function TeamsPage() {
           onAction={user?.role === 'manager' ? () => setShowModal(true) : undefined} 
         />
       ) : (
-        <div className="teams-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team) => (
-            <div key={team._id} className="team-card">
-              <div className="team-card-content">
-                <h3 className="team-card-title">{team.name}</h3>
-                <div className="team-info">
-                  <p className="team-info-item">
-                    <span className="team-info-label">Members:</span>
-                    <span className="team-info-value">{team.members ? team.members.length : 0}</span>
-                  </p>
-                  <p className="team-info-item">
-                    <span className="team-info-label">Created:</span>
-                    <span className="team-info-value">{formatDate(team.createdAt)}</span>
-                  </p>
+            <div 
+              key={team._id} 
+              className="group bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-neutral-300"
+            >
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-2 bg-neutral-50 rounded-lg group-hover:bg-neutral-100/80 transition-colors">
+                    <Users size={20} className="text-neutral-700" />
+                  </div>
+                  <h3 className="text-base font-bold text-neutral-900 group-hover:text-black">{team.name}</h3>
+                </div>
+                <div className="space-y-2 text-xs text-neutral-500">
+                  <div className="flex justify-between items-center py-1.5 border-b border-neutral-100">
+                    <span className="font-medium text-neutral-400">Members</span>
+                    <span className="font-semibold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-full">{team.members ? team.members.length : 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5">
+                    <span className="font-medium text-neutral-400">Created</span>
+                    <span className="text-neutral-700 flex items-center gap-1">
+                      <Calendar size={12} />
+                      {formatDate(team.createdAt)}
+                    </span>
+                  </div>
                 </div>
               </div>
               <button 
-                className="btn btn-primary team-card-btn"
+                className="w-full btn btn-primary flex items-center justify-center gap-1.5 mt-auto group"
                 onClick={() => navigate(`/teams/${team._id}`)}
               >
-                View Details
+                View Workspace
+                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
           ))}

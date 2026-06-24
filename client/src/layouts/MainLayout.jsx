@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import TaskSphereLogo from '../components/TaskSphereLogo';
 import { useAuth } from '../context/AuthContext';
+import SpotlightCursor from '../components/SpotlightCursor';
 
 function MainLayout() {
   const { user, logout } = useAuth();
@@ -21,6 +22,7 @@ function MainLayout() {
 
   return (
     <div className="layout-wrapper">
+      <SpotlightCursor />
       {/* Header */}
       <header className="layout-header">
         <div className="header-content">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMetrics, exportMetrics } from '../../services/reportService';
 import { ReportsSkeleton } from '../../components/Skeleton';
+import { BarChart3, FileSpreadsheet, ShieldAlert, Award } from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -57,10 +58,10 @@ export default function ReportsPage() {
 
   if (error) {
     return (
-      <div className="reports-container">
-        <div className="reports-header-wrapper">
-          <div className="reports-header">
-            <h1 className="reports-title">Reports</h1>
+      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900 leading-none">Reports</h1>
           </div>
         </div>
         <div className="error-card">{error}</div>
@@ -77,91 +78,98 @@ export default function ReportsPage() {
     }));
 
   return (
-    <div className="reports-container">
-      <div className="reports-header-wrapper">
-        <div className="reports-header">
-          <h1 className="reports-title">Reports</h1>
-          <p className="reports-subtitle">System insights and performance overview</p>
+    <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-10">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900 leading-none">Reports</h1>
+          <p className="mt-2 text-sm text-neutral-500">System insights and performance overview</p>
         </div>
         <button 
           onClick={handleExport} 
           disabled={exporting}
-          className="btn btn-secondary"
+          className="btn btn-secondary flex items-center gap-1.5 self-start sm:self-auto"
         >
+          <FileSpreadsheet size={15} />
           {exporting ? 'Exporting...' : 'Export CSV'}
         </button>
       </div>
 
-      <div className="reports-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Section 1: Tasks Closed Per Week */}
-        <div className="reports-section">
-          <h2 className="reports-section-title">Tasks Closed Per Week</h2>
+        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex flex-col">
+          <h2 className="text-base font-bold text-neutral-900 mb-4 flex items-center gap-2">
+            <BarChart3 size={18} className="text-neutral-500" />
+            Tasks Closed Per Week
+          </h2>
           {metrics.tasksClosedPerWeek.length === 0 ? (
-            <div className="reports-card">
-              <span className="reports-card-label" style={{ textTransform: 'none' }}>
-                No tasks closed yet.
-              </span>
+            <div className="flex-1 flex items-center justify-center p-8 text-neutral-400 text-sm">
+              No tasks closed yet.
             </div>
           ) : (
-            <div className="reports-card reports-card--chart">
-              <div className="reports-chart-container">
-                <ResponsiveContainer>
-                  <BarChart data={chartData} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="var(--color-text-muted)" 
-                      fontSize={11} 
-                      tickLine={false}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                    />
-                    <YAxis 
-                      stroke="var(--color-text-muted)" 
-                      fontSize={11} 
-                      tickLine={false}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      allowDecimals={false}
-                    />
-                    <Tooltip 
-                      cursor={{ fill: 'var(--color-border-subtle)', opacity: 0.5 }}
-                      contentStyle={{ 
-                        backgroundColor: 'var(--color-surface)', 
-                        border: '1px solid var(--color-border)', 
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px',
-                        color: 'var(--color-text-primary)'
-                      }} 
-                    />
-                    <Bar dataKey="Closed Tasks" fill="var(--color-text-primary)" radius={[4, 4, 0, 0]} barSize={20} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="h-64 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#a3a3a3" 
+                    fontSize={11} 
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e5e5' }}
+                  />
+                  <YAxis 
+                    stroke="#a3a3a3" 
+                    fontSize={11} 
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e5e5' }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#fafafa', opacity: 0.5 }}
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e5e5e5', 
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: '#171717'
+                    }} 
+                  />
+                  <Bar dataKey="Closed Tasks" fill="#171717" radius={[4, 4, 0, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>
 
         {/* Section 2: Top Contributors */}
-        <div className="reports-section">
-          <h2 className="reports-section-title">Top Contributors</h2>
+        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex flex-col">
+          <h2 className="text-base font-bold text-neutral-900 mb-4 flex items-center gap-2">
+            <Award size={18} className="text-neutral-500" />
+            Top Contributors
+          </h2>
           {metrics.topContributors.length === 0 ? (
-            <div className="reports-card">
-              <span className="reports-card-label" style={{ textTransform: 'none' }}>
-                No active contributors logged.
-              </span>
+            <div className="flex-1 flex items-center justify-center p-8 text-neutral-400 text-sm">
+              No active contributors logged.
             </div>
           ) : (
-            <div className="leaderboard-list">
+            <div className="divide-y divide-neutral-100 flex-1">
               {metrics.topContributors.map((item, index) => {
                 const rank = index + 1;
                 return (
-                  <div key={item.actor_id} className="leaderboard-item">
-                    <div className="leaderboard-left">
-                      <span className={`leaderboard-rank leaderboard-rank--${rank}`}>
+                  <div key={item.actor_id} className="flex items-center justify-between py-3.5 px-1">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                        rank === 1 ? 'bg-amber-100 text-amber-800' :
+                        rank === 2 ? 'bg-zinc-100 text-zinc-800' :
+                        rank === 3 ? 'bg-amber-50 text-amber-700' :
+                        'bg-neutral-50 text-neutral-500'
+                      }`}>
                         {rank}
                       </span>
-                      <span className="leaderboard-name">{item.name}</span>
+                      <span className="text-sm font-semibold text-neutral-900">{item.name}</span>
                     </div>
-                    <span className="leaderboard-actions">{item.actions} actions</span>
+                    <span className="text-xs text-neutral-500 font-medium bg-neutral-50 px-2.5 py-1 rounded-full border border-neutral-200/45">{item.actions} actions</span>
                   </div>
                 );
               })}
@@ -170,22 +178,25 @@ export default function ReportsPage() {
         </div>
 
         {/* Section 3: Overdue Rate */}
-        <div className="reports-section">
-          <h2 className="reports-section-title">Overdue Rate</h2>
-          <div className="reports-card-list">
-            <div className="reports-card">
-              <span className="reports-card-value">{metrics.overdueRate.totalActive}</span>
-              <span className="reports-card-label">Total Active Tasks</span>
+        <div className="lg:col-span-2 bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm">
+          <h2 className="text-base font-bold text-neutral-900 mb-6 flex items-center gap-2">
+            <ShieldAlert size={18} className="text-neutral-500" />
+            Overdue Rate & Task Health
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="bg-neutral-50/50 border border-neutral-200/60 rounded-xl p-5 text-center transition-all duration-300 hover:border-neutral-300/80">
+              <span className="block text-3xl font-extrabold tracking-tight text-neutral-900 mb-1">{metrics.overdueRate.totalActive}</span>
+              <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Total Active Tasks</span>
             </div>
-            <div className="reports-card">
-              <span className="reports-card-value">{metrics.overdueRate.overdue}</span>
-              <span className="reports-card-label">Overdue Tasks</span>
+            <div className="bg-neutral-50/50 border border-neutral-200/60 rounded-xl p-5 text-center transition-all duration-300 hover:border-neutral-300/80">
+              <span className="block text-3xl font-extrabold tracking-tight text-red-600 mb-1">{metrics.overdueRate.overdue}</span>
+              <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Overdue Tasks</span>
             </div>
-            <div className="reports-card">
-              <span className="reports-card-value">
+            <div className="bg-neutral-50/50 border border-neutral-200/60 rounded-xl p-5 text-center transition-all duration-300 hover:border-neutral-300/80">
+              <span className="block text-3xl font-extrabold tracking-tight text-neutral-900 mb-1">
                 {(metrics.overdueRate.rate * 100).toFixed(1)}%
               </span>
-              <span className="reports-card-label">Overdue Percentage</span>
+              <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Overdue Percentage</span>
             </div>
           </div>
         </div>
