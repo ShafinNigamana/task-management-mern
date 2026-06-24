@@ -338,112 +338,116 @@ export default function LandingPage() {
         </div>
 
         {/* Floating Mockup Dashboard */}
-        <motion.div
-          initial={{ opacity: 0, y: 60, rotateX: 8 }}
-          animate={{
-            opacity: 1,
-            y: [0, -18, 0],
-            rotateX: [2, -1, 2],
-            rotateY: [-1, 1, -1],
-          }}
-          transition={{
-            opacity: { duration: 0.8, delay: 0.5 },
-            y: {
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            },
-            rotateX: {
-              duration: 7,
-              repeat: Infinity,
-              ease: "easeInOut"
-            },
-            rotateY: {
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }
-          }}
-          className="hero-mockup-wrapper"
-        >
-          <Interactive3DTilt maxTilt={12}>
-            <div className="hero-mockup-frame">
-              <div className="mockup-header">
-                <div className="mockup-dots">
-                  <span className="dot dot--red"></span>
-                  <span className="dot dot--yellow"></span>
-                  <span className="dot dot--green"></span>
+        <div className="hero-mockup-container">
+          <div className="hero-mockup-scaler">
+            <motion.div
+              initial={{ opacity: 0, y: 60, rotateX: 8 }}
+              animate={{
+                opacity: 1,
+                y: [0, -18, 0],
+                rotateX: [2, -1, 2],
+                rotateY: [-1, 1, -1],
+              }}
+              transition={{
+                opacity: { duration: 0.8, delay: 0.5 },
+                y: {
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                },
+                rotateX: {
+                  duration: 7,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                },
+                rotateY: {
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }
+              }}
+              className="hero-mockup-wrapper"
+            >
+              <Interactive3DTilt maxTilt={12}>
+                <div className="hero-mockup-frame">
+                  <div className="mockup-header">
+                    <div className="mockup-dots">
+                      <span className="dot dot--red"></span>
+                      <span className="dot dot--yellow"></span>
+                      <span className="dot dot--green"></span>
+                    </div>
+                    <div className="mockup-title">TaskSphere Workspace</div>
+                  </div>
+                  <div className="mockup-body">
+                    {/* Inner Dashboard representation */}
+                    <div className="mockup-sidebar">
+                      <div className="mockup-sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <TaskSphereLogo iconOnly size={16} />
+                      </div>
+                      <div className="mockup-sidebar-link active" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-primary)' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      </div>
+                      <div className="mockup-sidebar-link" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      </div>
+                      <div className="mockup-sidebar-link" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+                      </div>
+                    </div>
+                    <div className="mockup-main">
+                      <div className="mockup-metrics">
+                        <div className="mockup-card">
+                          <div className="mockup-label">Active Workspace</div>
+                          <div className="mockup-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                            Product Launch
+                          </div>
+                        </div>
+                        <div className="mockup-card">
+                          <div className="mockup-label">Tasks Completed</div>
+                          <div className="mockup-value">1,402</div>
+                        </div>
+                      </div>
+                      <div className="mockup-kanban">
+                        <div className="mockup-col">
+                          <div className="mockup-col-header">
+                            <span>To Do</span>
+                          </div>
+                          <div className="mockup-task border-high">
+                            <h5>Refactor API routes</h5>
+                            <span className="mockup-task-priority priority-high">High</span>
+                          </div>
+                          <div className="mockup-task border-medium">
+                            <h5>Write documentation</h5>
+                            <span className="mockup-task-priority priority-medium">Medium</span>
+                          </div>
+                        </div>
+                        <div className="mockup-col">
+                          <div className="mockup-col-header">
+                            <span>In Progress</span>
+                          </div>
+                          <div className="mockup-task border-high">
+                            <h5>Setup rate limiting</h5>
+                            <span className="mockup-task-priority priority-high">High</span>
+                          </div>
+                        </div>
+                        <div className="mockup-col">
+                          <div className="mockup-col-header">
+                            <span>Done</span>
+                          </div>
+                          <div className="mockup-task complete">
+                            <h5>Mongoose collections</h5>
+                            <span className="mockup-task-priority priority-low">Done</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="mockup-title">TaskSphere Workspace</div>
-              </div>
-              <div className="mockup-body">
-                {/* Inner Dashboard representation */}
-                <div className="mockup-sidebar">
-                  <div className="mockup-sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <TaskSphereLogo iconOnly size={16} />
-                  </div>
-                  <div className="mockup-sidebar-link active" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-primary)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                  </div>
-                  <div className="mockup-sidebar-link" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                  <div className="mockup-sidebar-link" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-                  </div>
-                </div>
-                <div className="mockup-main">
-                  <div className="mockup-metrics">
-                    <div className="mockup-card">
-                      <div className="mockup-label">Active Workspace</div>
-                      <div className="mockup-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
-                        Product Launch
-                      </div>
-                    </div>
-                    <div className="mockup-card">
-                      <div className="mockup-label">Tasks Completed</div>
-                      <div className="mockup-value">1,402</div>
-                    </div>
-                  </div>
-                  <div className="mockup-kanban">
-                    <div className="mockup-col">
-                      <div className="mockup-col-header">
-                        <span>To Do</span>
-                      </div>
-                      <div className="mockup-task border-high">
-                        <h5>Refactor API routes</h5>
-                        <span className="mockup-task-priority priority-high">High</span>
-                      </div>
-                      <div className="mockup-task border-medium">
-                        <h5>Write documentation</h5>
-                        <span className="mockup-task-priority priority-medium">Medium</span>
-                      </div>
-                    </div>
-                    <div className="mockup-col">
-                      <div className="mockup-col-header">
-                        <span>In Progress</span>
-                      </div>
-                      <div className="mockup-task border-high">
-                        <h5>Setup rate limiting</h5>
-                        <span className="mockup-task-priority priority-high">High</span>
-                      </div>
-                    </div>
-                    <div className="mockup-col">
-                      <div className="mockup-col-header">
-                        <span>Done</span>
-                      </div>
-                      <div className="mockup-task complete">
-                        <h5>Mongoose collections</h5>
-                        <span className="mockup-task-priority priority-low">Done</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Interactive3DTilt>
-        </motion.div>
+              </Interactive3DTilt>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* 2. Interactive Sandbox Section */}
