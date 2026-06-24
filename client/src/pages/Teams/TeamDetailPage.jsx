@@ -577,7 +577,7 @@ function TeamDetailPage() {
           ))}
         </div>
 
-        <DragOverlay dropAnimation={null}>
+        <DragOverlay>
           {activeTask ? (
             <div className={`kanban-card kanban-card-overlay kanban-card--priority-${activeTask.priority || 'medium'}`}>
               <TaskCardContent task={activeTask} />

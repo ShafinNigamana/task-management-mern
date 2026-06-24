@@ -76,15 +76,9 @@ function SortableSandboxTaskCard({ task, onDelete }) {
   };
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
       style={style}
-      layout
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -3, scale: 1.01, boxShadow: 'var(--shadow-sm)' }}
-      transition={{ duration: 0.2 }}
       className={`sandbox-task-card priority--${task.priority === 'low' ? 'low' : task.priority === 'high' ? 'high' : 'medium'} ${task.status === 'done' ? 'complete' : ''} ${isDragging ? 'sandbox-task-card--dragging' : ''}`}
       {...attributes}
       {...listeners}
@@ -107,7 +101,7 @@ function SortableSandboxTaskCard({ task, onDelete }) {
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -551,7 +545,7 @@ export default function LandingPage() {
               />
             </div>
 
-            <DragOverlay dropAnimation={null}>
+            <DragOverlay>
               {activeTask ? (
                 <SandboxTaskCardOverlay task={activeTask} />
               ) : null}
