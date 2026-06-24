@@ -4495,7 +4495,7 @@ input, select, textarea {
 }
 
 .reports-donut-center-val {
-  font-size: var(--text-h3);
+  font-size: var(--text-stat);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
@@ -4522,7 +4522,7 @@ input, select, textarea {
 .reports-legend-item {
   display: flex;
   align-items: center;
-  gap: var(--space-1.5);
+  gap: 6px;
   font-weight: 500;
   color: var(--color-text-muted);
 }
