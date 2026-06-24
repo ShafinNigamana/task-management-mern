@@ -3706,54 +3706,37 @@ input, select, textarea {
   }
 }
 
-/* ── Custom Dual-Ring Cursor ── */
+/* ── Custom Gooey Cellular Trail Cursor ── */
 .custom-cursor-container {
   pointer-events: none;
 }
 
-.cursor-ball-big,
-.cursor-ball-small {
+.cursor-gooey-trail {
   position: fixed;
   top: 0;
   left: 0;
   pointer-events: none;
   mix-blend-mode: difference;
   z-index: 999999;
-  will-change: transform;
+  filter: url("#goo");
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.custom-cursor-container.cursor-hidden .cursor-ball-big,
-.custom-cursor-container.cursor-hidden .cursor-ball-small {
+.custom-cursor-container.cursor-hidden .cursor-gooey-trail {
   opacity: 0;
   visibility: hidden;
 }
 
-.cursor-ball-big {
-  margin-top: -15px;
-  margin-left: -15px;
-}
-
-.cursor-ball-small {
-  margin-top: -5px;
-  margin-left: -5px;
-}
-
-.cursor-ring-svg {
-  fill: none;
-  stroke: #ffffff;
-  stroke-width: 1.5px;
-  transform-origin: center;
-  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.cursor-ball-big.hovered .cursor-ring-svg {
-  transform: scale(2.2);
-  stroke-width: 0.8px;
-}
-
-.cursor-dot-svg {
-  fill: #ffffff;
+.cursor-ball-span {
+  position: absolute;
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  transform-origin: center center;
+  margin-top: -13px;
+  margin-left: -13px;
 }
 
 /* Hide standard cursor only when custom cursor is active */

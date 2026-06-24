@@ -2,54 +2,107 @@ import { useEffect, useRef } from 'react';
 
 export default function SpotlightCursor() {
   const containerRef = useRef(null);
-  const bigRingRef = useRef(null);
-  const smallDotRef = useRef(null);
+  const cursorRef = useRef(null);
 
   useEffect(() => {
-    const container = containerRef.current;
-    const bigRing = bigRingRef.current;
-    const smallDot = smallDotRef.current;
-    if (!container || !bigRing || !smallDot) return;
+    // Disable on mobile/touch screens (coarse pointer devices)
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchDevice) return;
 
-    let rafId;
+    const container = containerRef.current;
+    const cursor = cursorRef.current;
+    if (!container || !cursor) return;
+
+    const amount = 20;
+    const sineDots = Math.floor(amount * 0.3);
+    const width = 26;
+    const idleTimeout = 150;
+
     let targetX = 0;
     let targetY = 0;
-    
-    // Easing variables for smooth trailing effect
-    let bigX = 0;
-    let bigY = 0;
-    let smallX = 0;
-    let smallY = 0;
-    
+    let lastFrame = 0;
     let isMoving = false;
     let hasMoved = false;
+    let idle = false;
+    let timeoutID;
+    let isHovering = false;
 
-    const updatePosition = () => {
-      // Easing maths (lerp)
-      // Outer ring lags behind smoothly (15% interpolation speed)
-      bigX += (targetX - bigX) * 0.15;
-      bigY += (targetY - bigY) * 0.15;
+    // Build dots tracking data
+    const dots = Array.from({ length: amount }, (_, i) => {
+      const scale = 1 - 0.045 * i;
+      return {
+        index: i,
+        scale,
+        x: 0,
+        y: 0,
+        lockX: 0,
+        lockY: 0,
+        angleX: Math.PI * 2 * Math.random(),
+        angleY: Math.PI * 2 * Math.random(),
+        anglespeed: 0.05,
+        range: width / 2 - (width / 2) * scale + 2,
+        element: null
+      };
+    });
 
-      // Inner dot follows faster and tighter (35% interpolation speed)
-      smallX += (targetX - smallX) * 0.35;
-      smallY += (targetY - smallY) * 0.35;
+    // Dynamically insert spans
+    dots.forEach((dot) => {
+      const span = document.createElement('span');
+      span.className = 'cursor-ball-span';
+      cursor.appendChild(span);
+      dot.element = span;
+    });
 
-      if (bigRing) {
-        bigRing.style.transform = `translate3d(${bigX}px, ${bigY}px, 0)`;
-      }
-      if (smallDot) {
-        smallDot.style.transform = `translate3d(${smallX}px, ${smallY}px, 0)`;
-      }
+    const startIdleTimer = () => {
+      timeoutID = setTimeout(() => {
+        idle = true;
+        dots.forEach((dot) => {
+          dot.lockX = dot.x;
+          dot.lockY = dot.y;
+        });
+      }, idleTimeout);
+      idle = false;
+    };
 
-      // Check distance to decide if animation frame loop can pause when idle
-      const distBig = Math.abs(targetX - bigX) + Math.abs(targetY - bigY);
-      const distSmall = Math.abs(targetX - smallX) + Math.abs(targetY - smallY);
-      
-      if (distBig > 0.05 || distSmall > 0.05) {
-        rafId = requestAnimationFrame(updatePosition);
-      } else {
-        isMoving = false;
-      }
+    const resetIdleTimer = () => {
+      clearTimeout(timeoutID);
+      startIdleTimer();
+    };
+
+    let rafId;
+
+    const updatePosition = (timestamp) => {
+      if (!lastFrame) lastFrame = timestamp;
+      const delta = timestamp - lastFrame;
+      lastFrame = timestamp;
+
+      let x = targetX;
+      let y = targetY;
+
+      dots.forEach((dot, index) => {
+        let nextDot = dots[index + 1] || dots[0];
+        
+        if (!idle || index <= sineDots) {
+          dot.x = x;
+          dot.y = y;
+          const dx = (nextDot.x - dot.x) * 0.35;
+          const dy = (nextDot.y - dot.y) * 0.35;
+          x += dx;
+          y += dy;
+        } else {
+          dot.angleX += dot.anglespeed;
+          dot.angleY += dot.anglespeed;
+          dot.y = dot.lockY + Math.sin(dot.angleY) * dot.range;
+          dot.x = dot.lockX + Math.sin(dot.angleX) * dot.range;
+        }
+
+        if (dot.element) {
+          const hoverScale = isHovering ? 1.8 : 1.0;
+          dot.element.style.transform = `translate3d(${dot.x}px, ${dot.y}px, 0) scale(${dot.scale * hoverScale})`;
+        }
+      });
+
+      rafId = requestAnimationFrame(updatePosition);
     };
 
     const handleMouseMove = (e) => {
@@ -58,13 +111,15 @@ export default function SpotlightCursor() {
 
       if (!hasMoved) {
         hasMoved = true;
-        // Hide the default cursor now that custom cursor is active
+        // Hide the default browser cursor
         document.documentElement.classList.add('custom-cursor-active');
       }
 
       if (container.classList.contains('cursor-hidden')) {
         container.classList.remove('cursor-hidden');
       }
+
+      resetIdleTimer();
 
       if (!isMoving) {
         isMoving = true;
@@ -84,17 +139,15 @@ export default function SpotlightCursor() {
       const target = e.target;
       if (!target) return;
 
-      // Detect hover over any link, button, active input, or explicitly hoverable item
-      const isHoverable = target.closest('a, button, [role="button"], .btn, .hoverable, input[type="submit"], input[type="button"], .public-header-logo-section');
-      if (isHoverable) {
-        if (bigRing) bigRing.classList.add('hovered');
+      const hoverable = target.closest('a, button, [role="button"], .btn, .hoverable, input[type="submit"], input[type="button"], .public-header-logo-section');
+      if (hoverable) {
+        isHovering = true;
       } else {
-        if (bigRing) bigRing.classList.remove('hovered');
+        isHovering = false;
       }
     };
 
     const handleTouchStart = () => {
-      // If user touches screen, show standard cursor / hide custom cursor
       if (container) container.classList.add('cursor-hidden');
       document.documentElement.classList.remove('custom-cursor-active');
       hasMoved = false;
@@ -106,8 +159,8 @@ export default function SpotlightCursor() {
     window.addEventListener('mouseover', handleMouseOver);
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
 
-    // Default state: hidden until first movement
     container.classList.add('cursor-hidden');
+    startIdleTimer();
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -116,22 +169,33 @@ export default function SpotlightCursor() {
       window.removeEventListener('mouseover', handleMouseOver);
       window.removeEventListener('touchstart', handleTouchStart);
       document.documentElement.classList.remove('custom-cursor-active');
+      clearTimeout(timeoutID);
       if (rafId) cancelAnimationFrame(rafId);
+      if (cursor) {
+        cursor.innerHTML = '';
+      }
     };
   }, []);
 
+  const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+  if (isTouchDevice) return null;
+
   return (
-    <div ref={containerRef} className="custom-cursor-container cursor-hidden">
-      <div ref={bigRingRef} className="cursor-ball-big">
-        <svg height="30" width="30">
-          <circle cx="15" cy="15" r="12" className="cursor-ring-svg" />
-        </svg>
+    <>
+      {/* SVG filter definition for gooey cellular effect */}
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style={{ display: 'none' }}>
+        <defs>
+          <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 35 -15" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+
+      <div ref={containerRef} className="custom-cursor-container cursor-hidden">
+        <div ref={cursorRef} className="cursor-gooey-trail" />
       </div>
-      <div ref={smallDotRef} className="cursor-ball-small">
-        <svg height="10" width="10">
-          <circle cx="5" cy="5" r="4" className="cursor-dot-svg" />
-        </svg>
-      </div>
-    </div>
+    </>
   );
 }
