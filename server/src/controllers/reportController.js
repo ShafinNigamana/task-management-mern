@@ -45,6 +45,10 @@ export const getReportMetrics = async (req, res) => {
           overdue: 0,
           rate: 0,
         },
+        statusDistribution: [],
+        priorityBreakdown: [],
+        teamWorkload: [],
+        memberWorkload: []
       });
     }
 
@@ -52,6 +56,7 @@ export const getReportMetrics = async (req, res) => {
       return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
     }, managedTeams[0]);
     const teamIds = managedTeams.map((t) => t._id.toString());
+    const teamObjectIds = managedTeams.map((t) => t._id);
 
     // Find the oldest MySQL log date for this manager's teams
     const [oldestLogRows] = await pool.query(`
@@ -66,7 +71,7 @@ export const getReportMetrics = async (req, res) => {
       oldestDate = oldestLogDate;
     }
 
-    // 1. Metric 1: Tasks Closed Per Week (MySQL)
+    // 1. Metric 1: Tasks Closed & Created Per Week (MySQL)
     const [closedRows] = await pool.query(`
       SELECT 
         YEARWEEK(created_at, 1) AS week,
@@ -79,12 +84,25 @@ export const getReportMetrics = async (req, res) => {
       ORDER BY week DESC
     `, [teamIds]);
 
+    const [createdRows] = await pool.query(`
+      SELECT 
+        YEARWEEK(created_at, 1) AS week,
+        COUNT(*) AS created_count
+      FROM audit_log
+      WHERE action = 'CREATE_TASK'
+        AND team_id IN (?)
+      GROUP BY YEARWEEK(created_at, 1)
+      ORDER BY week DESC
+    `, [teamIds]);
+
     const closedMap = new Map(closedRows.map((r) => [Number(r.week), r.closed_count]));
+    const createdMap = new Map(createdRows.map((r) => [Number(r.week), r.created_count]));
     const weeksList = generateContiguousWeeks(oldestDate);
     const tasksClosedPerWeek = weeksList
       .map((yw, index) => ({
         week: index + 1, // Relative week starting from 1
         closed_count: closedMap.get(yw) || 0,
+        created_count: createdMap.get(yw) || 0,
       }))
       .sort((a, b) => b.week - a.week);
 
@@ -123,6 +141,96 @@ export const getReportMetrics = async (req, res) => {
 
     const rate = totalActive > 0 ? Number((overdue / totalActive).toFixed(4)) : 0;
 
+    // 4. Metric 4: Status Distribution (MongoDB)
+    const statusDistribution = await Task.aggregate([
+      { $match: { teamId: { $in: teamObjectIds } } },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    // 5. Metric 5: Priority Breakdown (MongoDB)
+    const priorityBreakdown = await Task.aggregate([
+      { $match: { teamId: { $in: teamObjectIds } } },
+      { $group: { _id: "$priority", count: { $sum: 1 } } }
+    ]);
+
+    // 6. Metric 6: Team Workload (MongoDB)
+    const teamWorkload = await Task.aggregate([
+      { $match: { teamId: { $in: teamObjectIds } } },
+      {
+        $group: {
+          _id: "$teamId",
+          todo: { $sum: { $cond: [{ $eq: ["$status", "todo"] }, 1, 0] } },
+          inProgress: { $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] } },
+          done: { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } },
+          total: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "_id",
+          foreignField: "_id",
+          as: "teamDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$teamDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: { $ifNull: ["$teamDetails.name", "Unknown Team"] },
+          todo: 1,
+          inProgress: 1,
+          done: 1,
+          total: 1
+        }
+      }
+    ]);
+
+    // 7. Metric 7: Member Workload (MongoDB)
+    const memberWorkload = await Task.aggregate([
+      {
+        $match: {
+          teamId: { $in: teamObjectIds },
+          status: { $ne: "done" },
+          assigneeId: { $ne: null }
+        }
+      },
+      {
+        $group: {
+          _id: "$assigneeId",
+          activeCount: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: { $ifNull: ["$userDetails.name", "Unassigned"] },
+          activeCount: 1
+        }
+      },
+      { $sort: { activeCount: -1 } },
+      { $limit: 8 }
+    ]);
+
     return res.status(200).json({
       tasksClosedPerWeek,
       topContributors,
@@ -131,6 +239,10 @@ export const getReportMetrics = async (req, res) => {
         overdue,
         rate,
       },
+      statusDistribution,
+      priorityBreakdown,
+      teamWorkload,
+      memberWorkload
     });
   } catch (error) {
     console.error('Error fetching report metrics:', error);
@@ -146,7 +258,7 @@ export const exportReportMetrics = async (req, res) => {
     const managedTeams = await Team.find({ managerId: req.user.id });
     if (managedTeams.length === 0) {
       let csvContent = 'Section,Metric,Value\n';
-      csvContent += 'Tasks Closed Per Week,, \n';
+      csvContent += 'Tasks Closed & Created Per Week,, \n';
       csvContent += ',, \n';
       csvContent += 'Top Contributors,, \n';
       csvContent += ',, \n';
@@ -154,6 +266,14 @@ export const exportReportMetrics = async (req, res) => {
       csvContent += 'Overdue Rate,Total Active Tasks,0\n';
       csvContent += 'Overdue Rate,Overdue Tasks,0\n';
       csvContent += 'Overdue Rate,Overdue Percentage,0.0%\n';
+      csvContent += ',, \n';
+      csvContent += 'Task Status Distribution,, \n';
+      csvContent += ',, \n';
+      csvContent += 'Priority Breakdown,, \n';
+      csvContent += ',, \n';
+      csvContent += 'Team Workload,, \n';
+      csvContent += ',, \n';
+      csvContent += 'Member Workload,, \n';
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=report-metrics.csv');
@@ -164,6 +284,7 @@ export const exportReportMetrics = async (req, res) => {
       return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
     }, managedTeams[0]);
     const teamIds = managedTeams.map((t) => t._id.toString());
+    const teamObjectIds = managedTeams.map((t) => t._id);
 
     // Find oldest log for export
     const [oldestLogRows] = await pool.query(`
@@ -178,7 +299,7 @@ export const exportReportMetrics = async (req, res) => {
       oldestDate = oldestLogDate;
     }
 
-    // 1. Fetch Weekly Closed Tasks
+    // 1. Fetch Weekly Tasks Closed & Created
     const [closedRows] = await pool.query(`
       SELECT 
         YEARWEEK(created_at, 1) AS week,
@@ -191,12 +312,25 @@ export const exportReportMetrics = async (req, res) => {
       ORDER BY week DESC
     `, [teamIds]);
 
+    const [createdRows] = await pool.query(`
+      SELECT 
+        YEARWEEK(created_at, 1) AS week,
+        COUNT(*) AS created_count
+      FROM audit_log
+      WHERE action = 'CREATE_TASK'
+        AND team_id IN (?)
+      GROUP BY YEARWEEK(created_at, 1)
+      ORDER BY week DESC
+    `, [teamIds]);
+
     const closedMap = new Map(closedRows.map((r) => [Number(r.week), r.closed_count]));
+    const createdMap = new Map(createdRows.map((r) => [Number(r.week), r.created_count]));
     const weeksList = generateContiguousWeeks(oldestDate);
     const tasksClosedPerWeek = weeksList
       .map((yw, index) => ({
         week: index + 1,
         closed_count: closedMap.get(yw) || 0,
+        created_count: createdMap.get(yw) || 0,
       }))
       .sort((a, b) => b.week - a.week);
 
@@ -227,13 +361,104 @@ export const exportReportMetrics = async (req, res) => {
     });
     const rate = totalActive > 0 ? Number((overdue / totalActive).toFixed(4)) : 0;
 
+    // 4. Status Distribution
+    const statusDistribution = await Task.aggregate([
+      { $match: { teamId: { $in: teamObjectIds } } },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    // 5. Priority Breakdown
+    const priorityBreakdown = await Task.aggregate([
+      { $match: { teamId: { $in: teamObjectIds } } },
+      { $group: { _id: "$priority", count: { $sum: 1 } } }
+    ]);
+
+    // 6. Team Workload
+    const teamWorkload = await Task.aggregate([
+      { $match: { teamId: { $in: teamObjectIds } } },
+      {
+        $group: {
+          _id: "$teamId",
+          todo: { $sum: { $cond: [{ $eq: ["$status", "todo"] }, 1, 0] } },
+          inProgress: { $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] } },
+          done: { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } },
+          total: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "_id",
+          foreignField: "_id",
+          as: "teamDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$teamDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: { $ifNull: ["$teamDetails.name", "Unknown Team"] },
+          todo: 1,
+          inProgress: 1,
+          done: 1,
+          total: 1
+        }
+      }
+    ]);
+
+    // 7. Member Workload
+    const memberWorkload = await Task.aggregate([
+      {
+        $match: {
+          teamId: { $in: teamObjectIds },
+          status: { $ne: "done" },
+          assigneeId: { $ne: null }
+        }
+      },
+      {
+        $group: {
+          _id: "$assigneeId",
+          activeCount: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: { $ifNull: ["$userDetails.name", "Unassigned"] },
+          activeCount: 1
+        }
+      },
+      { $sort: { activeCount: -1 } },
+      { $limit: 8 }
+    ]);
+
     // Generate CSV content
     let csvContent = 'Section,Metric,Value\n';
     
-    // Add Closed Tasks Section
-    csvContent += 'Tasks Closed Per Week,, \n';
+    // Add Weekly Trend Section
+    csvContent += 'Tasks Weekly Trend,, \n';
     tasksClosedPerWeek.forEach(row => {
-      csvContent += `Tasks Closed Per Week,Week ${row.week},${row.closed_count} tasks\n`;
+      csvContent += `Tasks Weekly Trend,Week ${row.week} Created,${row.created_count} tasks\n`;
+      csvContent += `Tasks Weekly Trend,Week ${row.week} Closed,${row.closed_count} tasks\n`;
     });
     csvContent += ',, \n'; // separator row
 
@@ -246,10 +471,41 @@ export const exportReportMetrics = async (req, res) => {
     csvContent += ',, \n'; // separator row
 
     // Add Overdue Rate Section
-    csvContent += 'Overdue Rate,, \n';
+    csvContent += 'Overdue Rate & Task Health,, \n';
     csvContent += `Overdue Rate,Total Active Tasks,${totalActive}\n`;
     csvContent += `Overdue Rate,Overdue Tasks,${overdue}\n`;
     csvContent += `Overdue Rate,Overdue Percentage,${(rate * 100).toFixed(1)}%\n`;
+    csvContent += ',, \n'; // separator row
+
+    // Add Task Status Distribution Section
+    csvContent += 'Task Status Distribution,, \n';
+    statusDistribution.forEach(row => {
+      csvContent += `Status Distribution,${row._id},${row.count} tasks\n`;
+    });
+    csvContent += ',, \n'; // separator row
+
+    // Add Priority Breakdown Section
+    csvContent += 'Priority Breakdown,, \n';
+    priorityBreakdown.forEach(row => {
+      csvContent += `Priority Breakdown,${row._id},${row.count} tasks\n`;
+    });
+    csvContent += ',, \n'; // separator row
+
+    // Add Team Workload Section
+    csvContent += 'Team Workload,, \n';
+    teamWorkload.forEach(row => {
+      csvContent += `Team Workload,${row.name} (Todo),${row.todo} tasks\n`;
+      csvContent += `Team Workload,${row.name} (In Progress),${row.inProgress} tasks\n`;
+      csvContent += `Team Workload,${row.name} (Done),${row.done} tasks\n`;
+      csvContent += `Team Workload,${row.name} (Total),${row.total} tasks\n`;
+    });
+    csvContent += ',, \n'; // separator row
+
+    // Add Member Workload Section
+    csvContent += 'Member Workload,, \n';
+    memberWorkload.forEach((row, index) => {
+      csvContent += `Member Workload,#${index + 1} ${row.name},${row.activeCount} active tasks\n`;
+    });
 
     // Send CSV as a stream/attachment
     res.setHeader('Content-Type', 'text/csv');
