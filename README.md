@@ -25,6 +25,10 @@
 **Frontend Application**: [tasksphere-rho.vercel.app](https://tasksphere-rho.vercel.app)  
 **Backend REST API**: [task-management-api-rm0v.onrender.com](https://task-management-api-rm0v.onrender.com)
 
+<br />
+
+![Landing Page](./docs/screenshots/landing.png)
+
 </div>
 
 ---
