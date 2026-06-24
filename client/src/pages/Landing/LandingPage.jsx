@@ -339,7 +339,7 @@ export default function LandingPage() {
             className="hero-actions-container"
           >
             <Link to="/signup" className="btn btn-primary btn-lg">
-              Start for free <ArrowRight size={16} />
+              Get started <ArrowRight size={16} />
             </Link>
             <a href="#sandbox-section" className="btn btn-secondary btn-lg">
               <Play size={15} /> Try Sandbox
@@ -644,9 +644,9 @@ export default function LandingPage() {
       >
         <div className="landing-cta-content">
           <h2>Streamline your team's workflow today.</h2>
-          <p>Get started with TaskSphere for free. No credit card required.</p>
+          <p>Get started with TaskSphere today. No credit card required.</p>
           <Link to="/signup" className="btn btn-primary btn-lg">
-            <Sparkles size={16} /> Create free account
+            <Sparkles size={16} /> Create account
           </Link>
         </div>
       </motion.section>

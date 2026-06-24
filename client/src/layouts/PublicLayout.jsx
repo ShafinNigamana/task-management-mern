@@ -115,8 +115,6 @@ export default function PublicLayout() {
           <div className="public-footer-links-grid">
             <div className="footer-links-col">
               <h4>Product</h4>
-              <Link to="/">Features</Link>
-              <Link to="/">Security</Link>
               <Link to="/dashboard">Workspaces</Link>
             </div>
             <div className="footer-links-col">
@@ -128,14 +126,6 @@ export default function PublicLayout() {
             <div className="footer-links-col">
               <h4>Resources</h4>
               <Link to="/health">System Status</Link>
-              <Link to="/">Documentation</Link>
-              <Link to="/">FAQ</Link>
-            </div>
-            <div className="footer-links-col">
-              <h4>Legal</h4>
-              <Link to="/">Privacy Policy</Link>
-              <Link to="/">Terms of Service</Link>
-              <Link to="/">Security Disclosure</Link>
             </div>
           </div>
         </div>

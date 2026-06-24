@@ -39,7 +39,7 @@ export default function AboutPage() {
               We believe that task management tools shouldn't overwhelm teams with unnecessary features. A product should do three things exceptionally well: segment workspaces securely, log activity immutably, and present metrics clearly.
             </p>
             <p>
-              TaskSphere separates operational database models (MongoDB for flexible and quick document schemas) from reporting histories (MySQL for complex relational integrity). This hybrid design ensures fast day-to-day work item handling alongside strict audit reporting.
+              TaskSphere separates operational database models from reporting histories. This hybrid design ensures fast day-to-day work item handling alongside strict audit reporting.
             </p>
           </motion.div>
 
