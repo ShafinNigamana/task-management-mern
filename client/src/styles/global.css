@@ -3708,29 +3708,25 @@ input, select, textarea {
 
 /* ── Custom Dual-Ring Cursor ── */
 .custom-cursor-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
   pointer-events: none;
-  z-index: 999999;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.custom-cursor-container.cursor-hidden {
-  opacity: 0;
-  visibility: hidden;
 }
 
 .cursor-ball-big,
 .cursor-ball-small {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   pointer-events: none;
   mix-blend-mode: difference;
+  z-index: 999999;
   will-change: transform;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.custom-cursor-container.cursor-hidden .cursor-ball-big,
+.custom-cursor-container.cursor-hidden .cursor-ball-small {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .cursor-ball-big {
@@ -3760,19 +3756,15 @@ input, select, textarea {
   fill: #ffffff;
 }
 
-/* Hide standard cursor only on public marketing pages and on desktop */
-@media (pointer: fine) {
-  .public-layout-wrapper {
-    cursor: none !important;
-  }
-  .public-layout-wrapper a,
-  .public-layout-wrapper button,
-  .public-layout-wrapper [role="button"],
-  .public-layout-wrapper .btn,
-  .public-layout-wrapper input[type="submit"],
-  .public-layout-wrapper input[type="button"],
-  .public-layout-wrapper .public-header-logo-section {
-    cursor: none !important;
-  }
+/* Hide standard cursor only when custom cursor is active */
+.custom-cursor-active,
+.custom-cursor-active a,
+.custom-cursor-active button,
+.custom-cursor-active [role="button"],
+.custom-cursor-active .btn,
+.custom-cursor-active input[type="submit"],
+.custom-cursor-active input[type="button"],
+.custom-cursor-active .public-header-logo-section {
+  cursor: none !important;
 }
 

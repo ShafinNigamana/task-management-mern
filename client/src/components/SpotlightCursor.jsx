@@ -6,10 +6,6 @@ export default function SpotlightCursor() {
   const smallDotRef = useRef(null);
 
   useEffect(() => {
-    // Disable custom cursor on mobile/touch screens (coarse pointer devices)
-    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-    if (isTouchDevice) return;
-
     const container = containerRef.current;
     const bigRing = bigRingRef.current;
     const smallDot = smallDotRef.current;
@@ -26,6 +22,7 @@ export default function SpotlightCursor() {
     let smallY = 0;
     
     let isMoving = false;
+    let hasMoved = false;
 
     const updatePosition = () => {
       // Easing maths (lerp)
@@ -59,6 +56,12 @@ export default function SpotlightCursor() {
       targetX = e.clientX;
       targetY = e.clientY;
 
+      if (!hasMoved) {
+        hasMoved = true;
+        // Hide the default cursor now that custom cursor is active
+        document.documentElement.classList.add('custom-cursor-active');
+      }
+
       if (container.classList.contains('cursor-hidden')) {
         container.classList.remove('cursor-hidden');
       }
@@ -90,10 +93,18 @@ export default function SpotlightCursor() {
       }
     };
 
+    const handleTouchStart = () => {
+      // If user touches screen, show standard cursor / hide custom cursor
+      if (container) container.classList.add('cursor-hidden');
+      document.documentElement.classList.remove('custom-cursor-active');
+      hasMoved = false;
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
     window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     // Default state: hidden until first movement
     container.classList.add('cursor-hidden');
@@ -103,13 +114,11 @@ export default function SpotlightCursor() {
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
       window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('touchstart', handleTouchStart);
+      document.documentElement.classList.remove('custom-cursor-active');
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
-
-  // Server-side safety or touch screen safety
-  const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-  if (isTouchDevice) return null;
 
   return (
     <div ref={containerRef} className="custom-cursor-container cursor-hidden">
