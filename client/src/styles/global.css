@@ -3,6 +3,10 @@
    ============================================================ */
 
 :root {
+  /* Typography — IBM Plex Suite */
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', 'Fira Code', monospace;
+
   /* Monochrome palette */
   --color-bg:        #fafafa;
   --color-surface:   #ffffff;
@@ -98,12 +102,12 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   font-size: var(--text-body);
   line-height: 1.5;
-  letter-spacing: -0.006em;
+  letter-spacing: -0.011em;
 }
 
 a {
@@ -118,6 +122,26 @@ button {
 
 input, select, textarea {
   font-family: inherit;
+}
+
+/* ── Monospace data readout elements ── */
+.sandbox-stat-value,
+.sandbox-stat-label,
+.sandbox-col-badge,
+.sandbox-progress-label,
+.priority-label,
+.footer-copyright,
+.mockup-metric-value,
+.mockup-metric-label,
+.mockup-card-tag,
+.ts-logo-text,
+.summary-value,
+.summary-label,
+.task-status,
+.task-priority,
+.task-date,
+code, pre {
+  font-family: var(--font-mono);
 }
 
 
