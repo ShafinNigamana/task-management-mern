@@ -7,10 +7,15 @@ import { useAuth } from '../../context/AuthContext';
 import GridBackground from '../../components/GridBackground';
 import SpotlightCursor from '../../components/SpotlightCursor';
 
+/* ── helpers ── */
+const sanitize = (str) => str.replace(/[<>]/g, '');
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -22,18 +27,32 @@ function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  const validate = () => {
+    const errs = {};
+    if (!email)                         errs.email    = 'Email is required';
+    else if (!EMAIL_RE.test(email))     errs.email    = 'Enter a valid email address';
+
+    if (!password)                      errs.password = 'Password is required';
+    else if (password.length < 8)       errs.password = 'Password must be at least 8 characters';
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
       return;
     }
 
     try {
       setIsLoading(true);
-      const data = await authService.login(email, password);
+      const data = await authService.login(
+        email.trim().toLowerCase(),
+        password
+      );
       login(data.token, data.user);
       navigate('/dashboard');
     } catch (err) {
@@ -63,18 +82,19 @@ function LoginPage() {
         
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="form-stack">
+        <form onSubmit={handleSubmit} className="form-stack" noValidate>
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email</label>
             <input 
               type="email" 
               id="email"
-              className="form-input"
+              className={`form-input${fieldErrors.email ? ' form-input--error' : ''}`}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(sanitize(e.target.value)); setFieldErrors((p) => ({ ...p, email: null })); }}
               placeholder="you@example.com"
               autoComplete="email"
             />
+            {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
           </div>
           
           <div className="form-group">
@@ -82,12 +102,13 @@ function LoginPage() {
             <input 
               type="password" 
               id="password"
-              className="form-input"
+              className={`form-input${fieldErrors.password ? ' form-input--error' : ''}`}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: null })); }}
               placeholder="••••••••"
               autoComplete="current-password"
             />
+            {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
           </div>
           
           <button 
@@ -110,3 +131,4 @@ function LoginPage() {
 }
 
 export default LoginPage;
+
