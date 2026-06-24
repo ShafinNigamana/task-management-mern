@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import authService from '../../services/authService';
 import TaskSphereLogo from '../../components/TaskSphereLogo';
+import GridBackground from '../../components/GridBackground';
+import SpotlightCursor from '../../components/SpotlightCursor';
 
 function SignupPage() {
   const [formData, setFormData] = useState({
@@ -43,10 +46,20 @@ function SignupPage() {
   };
 
   return (
-    <div className="app-container">
-      <div className="auth-card auth-card--signup">
+    <div className="app-container" style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', width: '100%' }}>
+      <GridBackground />
+      <SpotlightCursor />
+
+      <motion.div 
+        className="auth-card auth-card--signup"
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
         <h1 className="auth-brand">
-          <TaskSphereLogo size={32} />
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <TaskSphereLogo size={32} />
+          </Link>
         </h1>
         <p className="auth-subtitle">Create your account</p>
         
@@ -126,7 +139,7 @@ function SignupPage() {
           <p className="auth-footer-text">Already have an account?</p>
           <Link to="/login" className="auth-footer-link">Sign in here</Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
