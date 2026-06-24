@@ -3705,4 +3705,74 @@ input, select, textarea {
     gap: var(--space-6);
   }
 }
+
+/* ── Custom Dual-Ring Cursor ── */
+.custom-cursor-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999999;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.custom-cursor-container.cursor-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.cursor-ball-big,
+.cursor-ball-small {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  will-change: transform;
+}
+
+.cursor-ball-big {
+  margin-top: -15px;
+  margin-left: -15px;
+}
+
+.cursor-ball-small {
+  margin-top: -5px;
+  margin-left: -5px;
+}
+
+.cursor-ring-svg {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.cursor-ball-big.hovered .cursor-ring-svg {
+  transform: scale(2.2);
+  stroke-width: 0.8px;
+}
+
+.cursor-dot-svg {
+  fill: #ffffff;
+}
+
+/* Hide standard cursor only on public marketing pages and on desktop */
+@media (pointer: fine) {
+  .public-layout-wrapper {
+    cursor: none !important;
+  }
+  .public-layout-wrapper a,
+  .public-layout-wrapper button,
+  .public-layout-wrapper [role="button"],
+  .public-layout-wrapper .btn,
+  .public-layout-wrapper input[type="submit"],
+  .public-layout-wrapper input[type="button"],
+  .public-layout-wrapper .public-header-logo-section {
+    cursor: none !important;
+  }
+}
 
