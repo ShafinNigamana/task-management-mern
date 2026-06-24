@@ -87,66 +87,66 @@ function DashboardPage() {
   const greetingName = user?.name || 'User';
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="premium-page-wrapper">
       {/* Header */}
-      <div className="mb-10 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900 leading-none">Dashboard</h1>
-          <p className="mt-2 text-sm text-neutral-500">Welcome back, {greetingName}</p>
+      <div className="premium-page-header">
+        <div className="premium-page-header-text">
+          <h1>Dashboard</h1>
+          <p>Welcome back, {greetingName}</p>
         </div>
       </div>
 
       {/* Summary Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="teams-list-grid mb-10" style={{ marginBottom: 'var(--space-10)' }}>
         {/* Card 1: Total Teams */}
-        <div className="group relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-neutral-300">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-300">
-            <Users size={56} className="text-neutral-900" />
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-icon">
+            <Users size={56} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Total Teams</span>
-            <span className="text-3xl font-bold tracking-tight text-neutral-900">{teams.length}</span>
+          <div className="dashboard-stat-info">
+            <span className="dashboard-stat-label">Total Teams</span>
+            <span className="dashboard-stat-value">{teams.length}</span>
           </div>
         </div>
 
         {/* Card 2: Total Tasks */}
-        <div className="group relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-neutral-300">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-300">
-            <LayoutGrid size={56} className="text-neutral-900" />
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-icon">
+            <LayoutGrid size={56} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Total Tasks</span>
-            <span className="text-3xl font-bold tracking-tight text-neutral-900">{tasks.length}</span>
+          <div className="dashboard-stat-info">
+            <span className="dashboard-stat-label">Total Tasks</span>
+            <span className="dashboard-stat-value">{tasks.length}</span>
           </div>
         </div>
 
         {/* Card 3: My Tasks */}
-        <div className="group relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-neutral-300">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-300">
-            <CheckSquare size={56} className="text-neutral-900" />
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-icon">
+            <CheckSquare size={56} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">My Tasks</span>
-            <span className="text-3xl font-bold tracking-tight text-neutral-900">{myTasksCount}</span>
+          <div className="dashboard-stat-info">
+            <span className="dashboard-stat-label">My Tasks</span>
+            <span className="dashboard-stat-value">{myTasksCount}</span>
           </div>
         </div>
 
         {/* Card 4: Overdue Tasks */}
-        <div className="group relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-neutral-300">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-300">
-            <Clock size={56} className="text-neutral-900" />
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-icon">
+            <Clock size={56} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Overdue Tasks</span>
-            <span className={`text-3xl font-bold tracking-tight ${overdueCount > 0 ? 'text-red-600' : 'text-neutral-900'}`}>{overdueCount}</span>
+          <div className="dashboard-stat-info">
+            <span className="dashboard-stat-label">Overdue Tasks</span>
+            <span className={`dashboard-stat-value ${overdueCount > 0 ? 'value--danger' : ''}`}>{overdueCount}</span>
           </div>
         </div>
       </div>
 
       {/* Recent Tasks Section */}
-      <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-neutral-950 mb-4 flex items-center gap-2">
-          <Activity size={18} className="text-neutral-500" />
+      <div className="activity-list-container">
+        <h2 className="activity-list-title">
+          <Activity size={18} />
           Recent Activity
         </h2>
         {recentTasks.length === 0 ? (
@@ -156,30 +156,30 @@ function DashboardPage() {
             description="Tasks from your teams will appear here." 
           />
         ) : (
-          <div className="divide-y divide-neutral-100">
+          <div className="activity-list-items">
             {recentTasks.map((task) => (
               <Link 
                 key={task._id} 
                 to={`/teams/${task.teamId}`} 
-                className="flex items-center justify-between py-4 group transition-colors hover:bg-neutral-50/50 px-2 -mx-2 rounded-xl"
+                className="activity-list-item"
               >
-                <div className="flex flex-col gap-1.5 min-w-0">
-                  <p className="text-sm font-semibold text-neutral-900 truncate group-hover:text-black">{task.title}</p>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className={`px-2 py-0.5 border rounded-full font-medium ${getStatusBadgeClass(task.status)}`}>
+                <div className="activity-item-main">
+                  <p className="activity-item-title">{task.title}</p>
+                  <div className="activity-item-badges">
+                    <span className={`badge badge-status-${task.status}`}>
                       {task.status}
                     </span>
-                    <span className={`px-2 py-0.5 border rounded-full font-medium ${getPriorityBadgeClass(task.priority)}`}>
+                    <span className={`badge badge-priority-${task.priority}`}>
                       {task.priority}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-neutral-400">
-                  <span className="text-xs text-neutral-500 flex items-center gap-1">
+                <div className="activity-item-right">
+                  <span className="activity-item-date">
                     <Calendar size={12} />
                     {formatDate(task.createdAt)}
                   </span>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 text-neutral-800" />
+                  <ArrowRight size={14} className="activity-item-arrow" />
                 </div>
               </Link>
             ))}

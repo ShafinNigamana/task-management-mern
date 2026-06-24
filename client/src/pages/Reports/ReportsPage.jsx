@@ -58,10 +58,10 @@ export default function ReportsPage() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-10 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900 leading-none">Reports</h1>
+      <div className="premium-page-wrapper">
+        <div className="premium-page-header">
+          <div className="premium-page-header-text">
+            <h1>Reports</h1>
           </div>
         </div>
         <div className="error-card">{error}</div>
@@ -78,36 +78,37 @@ export default function ReportsPage() {
     }));
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="premium-page-wrapper">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-10">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-900 leading-none">Reports</h1>
-          <p className="mt-2 text-sm text-neutral-500">System insights and performance overview</p>
+      <div className="premium-page-header">
+        <div className="premium-page-header-text">
+          <h1>Reports</h1>
+          <p>System insights and performance overview</p>
         </div>
         <button 
           onClick={handleExport} 
           disabled={exporting}
-          className="btn btn-secondary flex items-center gap-1.5 self-start sm:self-auto"
+          className="btn btn-secondary flex items-center gap-1.5"
+          style={{ alignSelf: 'flex-start' }}
         >
           <FileSpreadsheet size={15} />
           {exporting ? 'Exporting...' : 'Export CSV'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="reports-layout-grid">
         {/* Section 1: Tasks Closed Per Week */}
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex flex-col">
-          <h2 className="text-base font-bold text-neutral-900 mb-4 flex items-center gap-2">
-            <BarChart3 size={18} className="text-neutral-500" />
+        <div className="reports-panel-card">
+          <h2 className="reports-panel-title">
+            <BarChart3 size={18} style={{ color: 'var(--color-text-muted)' }} />
             Tasks Closed Per Week
           </h2>
           {metrics.tasksClosedPerWeek.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-8 text-neutral-400 text-sm">
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-8)', color: 'var(--color-text-muted)', fontSize: 'var(--text-secondary)' }}>
               No tasks closed yet.
             </div>
           ) : (
-            <div className="h-64 mt-2">
+            <div style={{ height: '256px', marginTop: 'var(--space-2)' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
@@ -143,33 +144,33 @@ export default function ReportsPage() {
         </div>
 
         {/* Section 2: Top Contributors */}
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex flex-col">
-          <h2 className="text-base font-bold text-neutral-900 mb-4 flex items-center gap-2">
-            <Award size={18} className="text-neutral-500" />
+        <div className="reports-panel-card">
+          <h2 className="reports-panel-title">
+            <Award size={18} style={{ color: 'var(--color-text-muted)' }} />
             Top Contributors
           </h2>
           {metrics.topContributors.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-8 text-neutral-400 text-sm">
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-8)', color: 'var(--color-text-muted)', fontSize: 'var(--text-secondary)' }}>
               No active contributors logged.
             </div>
           ) : (
-            <div className="divide-y divide-neutral-100 flex-1">
+            <div className="reports-leaderboard">
               {metrics.topContributors.map((item, index) => {
                 const rank = index + 1;
+                let rankClass = 'rank--other';
+                if (rank === 1) rankClass = 'rank--1';
+                else if (rank === 2) rankClass = 'rank--2';
+                else if (rank === 3) rankClass = 'rank--3';
+
                 return (
-                  <div key={item.actor_id} className="flex items-center justify-between py-3.5 px-1">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
-                        rank === 1 ? 'bg-amber-100 text-amber-800' :
-                        rank === 2 ? 'bg-zinc-100 text-zinc-800' :
-                        rank === 3 ? 'bg-amber-50 text-amber-700' :
-                        'bg-neutral-50 text-neutral-500'
-                      }`}>
+                  <div key={item.actor_id} className="reports-leaderboard-row">
+                    <div className="reports-leaderboard-left">
+                      <span className={`reports-rank-badge ${rankClass}`}>
                         {rank}
                       </span>
-                      <span className="text-sm font-semibold text-neutral-900">{item.name}</span>
+                      <span className="reports-leaderboard-name">{item.name}</span>
                     </div>
-                    <span className="text-xs text-neutral-500 font-medium bg-neutral-50 px-2.5 py-1 rounded-full border border-neutral-200/45">{item.actions} actions</span>
+                    <span className="reports-leaderboard-actions">{item.actions} actions</span>
                   </div>
                 );
               })}
@@ -178,25 +179,25 @@ export default function ReportsPage() {
         </div>
 
         {/* Section 3: Overdue Rate */}
-        <div className="lg:col-span-2 bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-base font-bold text-neutral-900 mb-6 flex items-center gap-2">
-            <ShieldAlert size={18} className="text-neutral-500" />
+        <div className="reports-panel-card reports-grid-col-span-2">
+          <h2 className="reports-panel-title" style={{ marginBottom: 'var(--space-6)' }}>
+            <ShieldAlert size={18} style={{ color: 'var(--color-text-muted)' }} />
             Overdue Rate & Task Health
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-neutral-50/50 border border-neutral-200/60 rounded-xl p-5 text-center transition-all duration-300 hover:border-neutral-300/80">
-              <span className="block text-3xl font-extrabold tracking-tight text-neutral-900 mb-1">{metrics.overdueRate.totalActive}</span>
-              <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Total Active Tasks</span>
+          <div className="reports-stats-card-grid">
+            <div className="reports-stat-box">
+              <span className="reports-stat-box-value">{metrics.overdueRate.totalActive}</span>
+              <span className="reports-stat-box-label">Total Active Tasks</span>
             </div>
-            <div className="bg-neutral-50/50 border border-neutral-200/60 rounded-xl p-5 text-center transition-all duration-300 hover:border-neutral-300/80">
-              <span className="block text-3xl font-extrabold tracking-tight text-red-600 mb-1">{metrics.overdueRate.overdue}</span>
-              <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Overdue Tasks</span>
+            <div className="reports-stat-box">
+              <span className="reports-stat-box-value value--danger">{metrics.overdueRate.overdue}</span>
+              <span className="reports-stat-box-label">Overdue Tasks</span>
             </div>
-            <div className="bg-neutral-50/50 border border-neutral-200/60 rounded-xl p-5 text-center transition-all duration-300 hover:border-neutral-300/80">
-              <span className="block text-3xl font-extrabold tracking-tight text-neutral-900 mb-1">
+            <div className="reports-stat-box">
+              <span className="reports-stat-box-value">
                 {(metrics.overdueRate.rate * 100).toFixed(1)}%
               </span>
-              <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Overdue Percentage</span>
+              <span className="reports-stat-box-label">Overdue Percentage</span>
             </div>
           </div>
         </div>

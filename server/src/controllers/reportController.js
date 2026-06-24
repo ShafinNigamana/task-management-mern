@@ -4,6 +4,32 @@ import Task from '../models/Task.js';
 import Team from '../models/Team.js';
 import mongoose from 'mongoose';
 
+// Helper to get ISO week (YEARWEEK mode 1 equivalent)
+function getISOYearWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getUTCFullYear() * 100 + weekNo;
+}
+
+// Helper to generate contiguous yearweeks since oldestDate
+function generateContiguousWeeks(oldestDate) {
+  const weeksList = [];
+  let tempDate = new Date(oldestDate);
+  const now = new Date();
+  const currentYW = getISOYearWeek(now);
+  while (tempDate <= now || getISOYearWeek(tempDate) === currentYW) {
+    const yw = getISOYearWeek(tempDate);
+    if (!weeksList.includes(yw)) {
+      weeksList.push(yw);
+    }
+    tempDate.setDate(tempDate.getDate() + 7);
+  }
+  return weeksList;
+}
+
 export const getReportMetrics = async (req, res) => {
   try {
     const pool = createMySQLPool();
@@ -22,7 +48,23 @@ export const getReportMetrics = async (req, res) => {
       });
     }
 
+    const oldestTeam = managedTeams.reduce((oldest, current) => {
+      return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+    }, managedTeams[0]);
     const teamIds = managedTeams.map((t) => t._id.toString());
+
+    // Find the oldest MySQL log date for this manager's teams
+    const [oldestLogRows] = await pool.query(`
+      SELECT MIN(created_at) as oldest_log
+      FROM audit_log
+      WHERE team_id IN (?)
+    `, [teamIds]);
+    const oldestLogDate = oldestLogRows[0]?.oldest_log ? new Date(oldestLogRows[0].oldest_log) : null;
+
+    let oldestDate = oldestTeam ? new Date(oldestTeam.createdAt) : new Date();
+    if (oldestLogDate && oldestLogDate < oldestDate) {
+      oldestDate = oldestLogDate;
+    }
 
     // 1. Metric 1: Tasks Closed Per Week (MySQL)
     const [closedRows] = await pool.query(`
@@ -36,6 +78,15 @@ export const getReportMetrics = async (req, res) => {
       GROUP BY YEARWEEK(created_at, 1)
       ORDER BY week DESC
     `, [teamIds]);
+
+    const closedMap = new Map(closedRows.map((r) => [Number(r.week), r.closed_count]));
+    const weeksList = generateContiguousWeeks(oldestDate);
+    const tasksClosedPerWeek = weeksList
+      .map((yw, index) => ({
+        week: index + 1, // Relative week starting from 1
+        closed_count: closedMap.get(yw) || 0,
+      }))
+      .sort((a, b) => b.week - a.week);
 
     // 2. Metric 2: Top 5 Contributors (MySQL)
     const [contributorRows] = await pool.query(`
@@ -73,7 +124,7 @@ export const getReportMetrics = async (req, res) => {
     const rate = totalActive > 0 ? Number((overdue / totalActive).toFixed(4)) : 0;
 
     return res.status(200).json({
-      tasksClosedPerWeek: closedRows,
+      tasksClosedPerWeek,
       topContributors,
       overdueRate: {
         totalActive,
@@ -109,7 +160,23 @@ export const exportReportMetrics = async (req, res) => {
       return res.send(csvContent);
     }
 
+    const oldestTeam = managedTeams.reduce((oldest, current) => {
+      return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+    }, managedTeams[0]);
     const teamIds = managedTeams.map((t) => t._id.toString());
+
+    // Find oldest log for export
+    const [oldestLogRows] = await pool.query(`
+      SELECT MIN(created_at) as oldest_log
+      FROM audit_log
+      WHERE team_id IN (?)
+    `, [teamIds]);
+    const oldestLogDate = oldestLogRows[0]?.oldest_log ? new Date(oldestLogRows[0].oldest_log) : null;
+
+    let oldestDate = oldestTeam ? new Date(oldestTeam.createdAt) : new Date();
+    if (oldestLogDate && oldestLogDate < oldestDate) {
+      oldestDate = oldestLogDate;
+    }
 
     // 1. Fetch Weekly Closed Tasks
     const [closedRows] = await pool.query(`
@@ -123,6 +190,15 @@ export const exportReportMetrics = async (req, res) => {
       GROUP BY YEARWEEK(created_at, 1)
       ORDER BY week DESC
     `, [teamIds]);
+
+    const closedMap = new Map(closedRows.map((r) => [Number(r.week), r.closed_count]));
+    const weeksList = generateContiguousWeeks(oldestDate);
+    const tasksClosedPerWeek = weeksList
+      .map((yw, index) => ({
+        week: index + 1,
+        closed_count: closedMap.get(yw) || 0,
+      }))
+      .sort((a, b) => b.week - a.week);
 
     // 2. Fetch Top Contributors
     const [contributorRows] = await pool.query(`
@@ -156,7 +232,7 @@ export const exportReportMetrics = async (req, res) => {
     
     // Add Closed Tasks Section
     csvContent += 'Tasks Closed Per Week,, \n';
-    closedRows.forEach(row => {
+    tasksClosedPerWeek.forEach(row => {
       csvContent += `Tasks Closed Per Week,Week ${row.week},${row.closed_count} tasks\n`;
     });
     csvContent += ',, \n'; // separator row
