@@ -301,6 +301,63 @@ input, select, textarea {
   color: var(--color-text-secondary);
 }
 
+/* ── Field-level error text ── */
+.field-error {
+  color: #dc2626;
+  font-size: 0.78rem;
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* ── Error state for inputs ── */
+.form-input--error,
+.form-input--error:hover {
+  border-color: #f87171;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.15);
+}
+
+.form-input--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* ── Password requirements checklist ── */
+.pw-rules {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  overflow: hidden;
+}
+
+.pw-rule {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.5;
+  transition: color 0.2s ease;
+}
+
+.pw-rule--pass {
+  color: #16a34a;
+}
+
+.pw-rule--fail {
+  color: #9ca3af;
+}
+
+.pw-rule-icon {
+  font-size: 0.72rem;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
 
 /* ============================================================
    LAYOUT  (Header / Sidebar / Main)
